@@ -77,16 +77,20 @@ void bgs::bkgSubtraction(cv::Mat Frame)
 		Frame.copyTo(_frame);
 		_bgsmask = Mat::zeros(Size(Frame.cols, Frame.rows), CV_8UC1);
 		cv::Mat bgsmask_rgb;
+		cv::Mat rgbimg[3];
 
 		absdiff(_bkg, Frame, _diff);
 		threshold(_diff, bgsmask_rgb, _threshold, 255, cv::THRESH_BINARY);
 
-		for(int j=0; j<bgsmask_rgb.rows; ++j)
-			for(int i=0; i<bgsmask_rgb.cols; ++i)
-			{
-				if (bgsmask_rgb.at<cv::Vec3b>(j, i)[0] || bgsmask_rgb.at<cv::Vec3b>(j, i)[1] || bgsmask_rgb.at<cv::Vec3b>(j, i)[2])
-					_bgsmask.at<uchar>(j, i) = 255;
-			}
+//		for(int j=0; j<bgsmask_rgb.rows; ++j)
+//			for(int i=0; i<bgsmask_rgb.cols; ++i)
+//			{
+//				if (bgsmask_rgb.at<cv::Vec3b>(j, i)[0] || bgsmask_rgb.at<cv::Vec3b>(j, i)[1] || bgsmask_rgb.at<cv::Vec3b>(j, i)[2])
+//					_bgsmask.at<uchar>(j, i) = 255;
+//			}
+
+		split(bgsmask_rgb, rgbimg);
+		_bgsmask = rgbimg[0] + rgbimg[1] + rgbimg[2];
 
 		if (_selective_bkg_update)
 		{
