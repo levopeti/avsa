@@ -15,13 +15,17 @@
 using namespace fgseg;
 
 //default constructor
-bgs::bgs(double threshold, double alpha, bool selective_bkg_update, int threshold_ghosts2, bool rgb)
+bgs::bgs(double threshold, double alpha, bool selective_bkg_update, int threshold_ghosts2, bool rgb, double alpha_sh, double beta_sh, int saturation_th, int hue_th)
 {
 	_threshold=threshold;
 	_alpha=alpha;
 	_rgb=rgb;
 	_selective_bkg_update=selective_bkg_update;
 	_threshold_ghosts2=threshold_ghosts2;
+	_alpha_sh = alpha_sh;
+	_beta_sh = beta_sh;
+	_saturation_th = saturation_th;
+	_hue_th = hue_th;
 }
 
 //default destructor
@@ -149,7 +153,7 @@ void bgs::removeShadows()
 
 	//ADD YOUR CODE HERE
 	//...
-	absdiff(_bgsmask, _bgsmask, _shadowmask);// currently void function mask=0 (should create shadow mask)
+//	absdiff(_bgsmask, _bgsmask, _shadowmask);// currently void function mask=0 (should create shadow mask)
 	//...
 
 	absdiff(_bgsmask, _shadowmask, _fgmask); // eliminates shadows from bgsmask
