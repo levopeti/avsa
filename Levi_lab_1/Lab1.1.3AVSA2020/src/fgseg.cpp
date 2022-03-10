@@ -9,6 +9,8 @@
 
 #include <opencv2/opencv.hpp>
 #include "fgseg.hpp"
+#include <stdlib.h>
+#include <algorithm>
 
 using namespace fgseg;
 
@@ -123,6 +125,27 @@ void bgs::removeShadows()
 {
 	// init Shadow Mask (currently Shadow Detection not implemented)
 	_bgsmask.copyTo(_shadowmask); // creates the mask (currently with bgs)
+	cv::Mat _frame_HSV;
+	cv::Mat _bkg_HSV;
+	cvtColor(_frame, _frame_HSV, cv::COLOR_BGR2HSV);
+	cvtColor(_bkg, _bkg_HSV, cv::COLOR_BGR2HSV);
+
+
+	for(int j=0; j<_bkg.rows; ++j)
+		for(int i=0; i<_bkg.cols; ++i)
+		{
+			int IH = _frame_HSV.at<cv::Vec3b>(j, i)[0];
+			int IS = _frame_HSV.at<cv::Vec3b>(j, i)[1];
+			int IV = _frame_HSV.at<cv::Vec3b>(j, i)[2];
+			int BH = _bkg_HSV.at<cv::Vec3b>(j, i)[0];
+			int BS = _bkg_HSV.at<cv::Vec3b>(j, i)[1];
+			int BV = _bkg_HSV.at<cv::Vec3b>(j, i)[2];
+
+			int Dh = min(abs(IH - BI), 360 - abs(IH - BI));
+
+			if ((IV / BV) >= _alpha_sh && (IV / BV) <= _beta_sh && abs(IS - BS) <= _saturation_sh && Dh <= _hue_th>)
+				_shadowmask.at<bool>(j, i) = 255;
+		}
 
 	//ADD YOUR CODE HERE
 	//...
