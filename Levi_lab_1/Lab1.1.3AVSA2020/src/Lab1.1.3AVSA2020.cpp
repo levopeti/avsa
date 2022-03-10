@@ -27,7 +27,6 @@ using namespace cv;  //to avoid using 'cv' to declare OpenCV functions and varia
 // using namespace fgseg;
 
 #define _CONSOLE_DEBUG 1 // flag for showing console debug messages (old style ;) )
-cout << 666;
 
 int main(int argc, char ** argv)
 {
@@ -42,7 +41,7 @@ int main(int argc, char ** argv)
 	string dataset_cat[1] = {"baseline"};
 	string baseline_seq[4] = {"highway","office","pedestrians","PETS2006"};
 	string image_path = "/input/in%06d.jpg"; //path to images - this format allows to read consecutive images with filename inXXXXXX.jpq (six digits) starting with 000001
-	cout << 666666;
+
 //
 //	string dataset_path = "/home/levcsi/IPCV_Madrid/AVSA/Lab_1/AVSASlidesVideos_dataset"; //SET THIS DIRECTORY according to your download
 //	string dataset_cat[1] = {"foregroundSeg"};

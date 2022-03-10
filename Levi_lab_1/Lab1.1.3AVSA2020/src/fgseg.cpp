@@ -141,9 +141,9 @@ void bgs::removeShadows()
 			int BS = _bkg_HSV.at<cv::Vec3b>(j, i)[1];
 			int BV = _bkg_HSV.at<cv::Vec3b>(j, i)[2];
 
-			int Dh = min(abs(IH - BI), 360 - abs(IH - BI));
+			int Dh = min(abs(IH - BH), 360 - abs(IH - BH));
 
-			if ((IV / BV) >= _alpha_sh && (IV / BV) <= _beta_sh && abs(IS - BS) <= _saturation_sh && Dh <= _hue_th>)
+			if ((IV / BV) >= _alpha_sh && (IV / BV) <= _beta_sh && abs(IS - BS) <= _saturation_th && Dh <= _hue_th>)
 				_shadowmask.at<bool>(j, i) = 255;
 		}
 
