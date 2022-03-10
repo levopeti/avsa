@@ -27,6 +27,7 @@ using namespace cv;  //to avoid using 'cv' to declare OpenCV functions and varia
 // using namespace fgseg;
 
 #define _CONSOLE_DEBUG 1 // flag for showing console debug messages (old style ;) )
+cout << 666;
 
 int main(int argc, char ** argv)
 {
