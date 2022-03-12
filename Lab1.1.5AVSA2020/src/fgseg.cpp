@@ -127,45 +127,46 @@ void bgs::bkgSubtraction(cv::Mat Frame)
 //method to detect and remove shadows in the BGS mask to create FG mask
 void bgs::removeShadows()
 {
-	// init Shadow Mask (currently Shadow Detection not implemented)
-//	_bgsmask.copyTo(_shadowmask); // creates the mask (currently with bgs)
-	_shadowmask = Mat::zeros(Size(_bgsmask.cols, _bgsmask.rows), CV_8UC1);
+	if (!_rgb){
+		absdiff(_bgsmask, _bgsmask, _shadowmask);// currently void function mask=0 (should create shadow mask)
+	}
+	else{
+		// init Shadow Mask (currently Shadow Detection not implemented)
+	//	_bgsmask.copyTo(_shadowmask); // creates the mask (currently with bgs)
+		_shadowmask = Mat::zeros(Size(_bgsmask.cols, _bgsmask.rows), CV_8UC1);
 
-	cv::Mat _frame_HSV;
-	cv::Mat _bkg_HSV;
-	cvtColor(_frame, _frame_HSV, cv::COLOR_BGR2HSV);
-	cvtColor(_bkg, _bkg_HSV, cv::COLOR_BGR2HSV);
-
-
-	for(int j=0; j<_bkg.rows; ++j)
-		for(int i=0; i<_bkg.cols; ++i)
-		{
-			double IH = _frame_HSV.at<cv::Vec3b>(j, i)[0];
-			double IS = _frame_HSV.at<cv::Vec3b>(j, i)[1];
-			double IV = _frame_HSV.at<cv::Vec3b>(j, i)[2];
-			double BH = _bkg_HSV.at<cv::Vec3b>(j, i)[0];
-			double BS = _bkg_HSV.at<cv::Vec3b>(j, i)[1];
-			double BV = _bkg_HSV.at<cv::Vec3b>(j, i)[2];
-
-			double Dh = min(abs(IH - BH), 360 - abs(IH - BH));
+		cv::Mat _frame_HSV;
+		cv::Mat _bkg_HSV;
+		cvtColor(_frame, _frame_HSV, cv::COLOR_BGR2HSV);
+		cvtColor(_bkg, _bkg_HSV, cv::COLOR_BGR2HSV);
 
 
-			if ((IV / BV) >= _alpha_sh && (IV / BV) <= _beta_sh && abs(IS - BS) <= _saturation_th && Dh <= _hue_th){
-				_shadowmask.at<uchar>(j, i) = 255;
+		for(int j=0; j<_bkg.rows; ++j)
+			for(int i=0; i<_bkg.cols; ++i)
+			{
+				double IH = _frame_HSV.at<cv::Vec3b>(j, i)[0];
+				double IS = _frame_HSV.at<cv::Vec3b>(j, i)[1];
+				double IV = _frame_HSV.at<cv::Vec3b>(j, i)[2];
+				double BH = _bkg_HSV.at<cv::Vec3b>(j, i)[0];
+				double BS = _bkg_HSV.at<cv::Vec3b>(j, i)[1];
+				double BV = _bkg_HSV.at<cv::Vec3b>(j, i)[2];
+
+				double Dh = min(abs(IH - BH), 360 - abs(IH - BH));
+
+
+				if ((IV / BV) >= _alpha_sh && (IV / BV) <= _beta_sh && abs(IS - BS) <= _saturation_th && Dh <= _hue_th){
+					_shadowmask.at<uchar>(j, i) = 255;
+				}
+			}
+
+		// Shadow mask set to 1 only when both the shadow and the background are 1 (there are other options)
+		for(int i=0; i<_bgsmask.rows; i++){
+			for(int j=0; j<_bgsmask.cols; j++)
+			{
+				_shadowmask.at<uchar>(i,j) = _shadowmask.at<uchar>(i,j) * _bgsmask.at<uchar>(i,j) * 255;
 			}
 		}
-
-	// Shadow mask set to 1 only when both the shadow and the background are 1 (there are other options)
-	for(int i=0; i<_bgsmask.rows; i++){
-		for(int j=0; j<_bgsmask.cols; j++)
-		{
-			_shadowmask.at<uchar>(i,j) = _shadowmask.at<uchar>(i,j) * _bgsmask.at<uchar>(i,j) * 255;
-		}
 	}
-	//ADD YOUR CODE HERE
-	//...
-//	absdiff(_bgsmask, _bgsmask, _shadowmask);// currently void function mask=0 (should create shadow mask)
-	//...
 
 	absdiff(_bgsmask, _shadowmask, _fgmask); // eliminates shadows from bgsmask
 }

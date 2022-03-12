@@ -121,7 +121,7 @@ int main(int argc, char ** argv)
 			double alpha = 0.1; // to set ... //Lab1.1.2-3
 			bool selective_bkg_update = true; // true ... //Lab1.1.2-3
 			int threshold_ghosts2 = 25; // to set ... //Lab1.1.3
-			bool rgb = true; //true false;
+			bool rgb = false; //true false;
 
 			double alpha_sh = 0.5;
 			double beta_sh = 0.9;

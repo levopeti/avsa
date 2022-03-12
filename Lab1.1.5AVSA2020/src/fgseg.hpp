@@ -65,6 +65,8 @@ namespace fgseg {
 		cv::Mat _fgmask; //binary image for foreground (FG)
 
 		cv::Mat _fgcounter; //foreground counter per pixel
+		cv::Mat _mean; //foreground counter per pixel
+		cv::Mat _std; //foreground counter per pixel
 
 		bool _rgb;
 		double _threshold;
