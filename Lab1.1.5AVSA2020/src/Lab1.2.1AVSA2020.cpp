@@ -20,6 +20,7 @@
 //Header fseg
 #include "fgseg.hpp"
 
+
 //namespaces
 using namespace std; //to avoid using'std' to declare std functions and variables (e.g., std::out -> out)
 using namespace cv;  //to avoid using 'cv' to declare OpenCV functions and variables (e.g., cv::Mat -> Mat)
@@ -40,8 +41,10 @@ int main(int argc, char ** argv)
 	// "/home/avsa/datasets/dataset2012lite/dataset/baseline/...
 
 	//SET THIS DIRECTORY according to your download
+
+	string dataset_path = "../../../AVSA/Lab_1/dataset2012lite/dataset";
 //	string dataset_path = "/home/levcsi/IPCV_Madrid/AVSA/Lab_1/dataset2012lite/dataset";
-	string dataset_path = "/home/eduardo/IPCV_Madrid/AVSA/Lab_1/dataset2012lite/dataset";
+//	string dataset_path = "/home/eduardo/IPCV_Madrid/AVSA/Lab_1/dataset2012lite/dataset";
 
 
 	string dataset_cat[1] = {"baseline"};
@@ -59,8 +62,9 @@ int main(int argc, char ** argv)
 	//Paths for the results
 	// In this example we assume that the results are stored in the project directory
 	// "/home/avsa/eclipse-workspace/Lab1.1AVSA2020/
+	string project_root_path = "../../../AVSA/Lab_1/AVSA2020results";
 //	string project_root_path = "/home/levcsi/IPCV_Madrid/AVSA/Lab_1/AVSA2020results";
-	string project_root_path = "/home/eduardo/IPCV_Madrid/AVSA/Lab_1/AVSA2020results";
+//	string project_root_path = "/home/eduardo/IPCV_Madrid/AVSA/Lab_1/AVSA2020results";
 //	string project_root_path = "/home/eduardo/Documents/Master_content/AVSA/Lab2/results";
 
 	//SET THIS DIRECTORY according to your project
