@@ -24,7 +24,7 @@ namespace fgseg {
 	public:
 
 		//constructor with parameter "threshold"
-		bgs(double threshold, double alpha, bool selective_bkg_update, int threshold_ghosts2, bool rgb, double alpha_sh, double beta_sh, double saturation_th, double hue_th);
+		bgs(double threshold, double alpha, bool selective_bkg_update, int threshold_ghosts2, bool rgb, double alpha_sh, double beta_sh, double saturation_th, double hue_th, double sigma_coef);
 
 		//destructor
 		~bgs(void);
@@ -85,6 +85,8 @@ namespace fgseg {
 		double _beta_sh;
 		int _saturation_th;
 		int _hue_th;
+
+		double _sigma_coef;
 
 	};//end of class bgs
 

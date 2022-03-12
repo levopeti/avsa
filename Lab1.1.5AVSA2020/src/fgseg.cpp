@@ -16,7 +16,7 @@
 using namespace fgseg;
 
 //default constructor
-bgs::bgs(double threshold, double alpha, bool selective_bkg_update, int threshold_ghosts2, bool rgb, double alpha_sh, double beta_sh, double saturation_th, double hue_th)
+bgs::bgs(double threshold, double alpha, bool selective_bkg_update, int threshold_ghosts2, bool rgb, double alpha_sh, double beta_sh, double saturation_th, double hue_th, double sigma_coef)
 {
 	_threshold=threshold;
 	_alpha=alpha;
@@ -27,6 +27,7 @@ bgs::bgs(double threshold, double alpha, bool selective_bkg_update, int threshol
 	_beta_sh = beta_sh;
 	_saturation_th = saturation_th;
 	_hue_th = hue_th;
+	_sigma_coef = sigma_coef;
 }
 
 //default destructor
@@ -199,24 +200,19 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 		Frame.convertTo(Frame, CV_64F);
 
 
-
 		// Set initial values with the 10 first frames
 		if (frame_idx <= 10){
-
 			_sum += Frame;
 			_sum_squares +=  Frame.mul(Frame);
 			_mean = _sum / frame_idx;
 			_variance = (_sum_squares / frame_idx) - (_mean.mul(_mean));
-
 		}
 		else{
-
-			absdiff(Frame,_mean,diff);
+			absdiff(Frame,_mean, diff);
 
 			for(int i=0; i<_bgsmask.rows; i++)
 				for(int j=0; j<_bgsmask.cols; j++)
-
-					if(diff.at<double>(i,j) > 6 * sqrt(_variance.at<double>(i,j))){ // we can play with this value
+					if(diff.at<double>(i,j) > _sigma_coef * sqrt(_variance.at<double>(i,j))){ // we can play with this value
 						_bgsmask.at<uchar>(i,j) = 255;
 //						_mean.at<double>(i,j) = _alpha * Frame.at<double>(i,j) + (1 - _alpha) * _mean.at<double>(i,j);
 //						_variance.at<double>(i,j) = _alpha * pow(Frame.at<double>(i,j) - _mean.at<double>(i,j), 2)+ (1 - _alpha) * _variance.at<double>(i,j);
@@ -229,7 +225,6 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 
 			// from double to uchar so it can be displayed
 			diff.convertTo(_diff, CV_8UC1);
-
 			}
 		}
 }

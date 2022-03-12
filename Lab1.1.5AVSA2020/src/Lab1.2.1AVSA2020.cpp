@@ -128,7 +128,9 @@ int main(int argc, char ** argv)
 			double saturation_th = 80;
 			double hue_th = 70;
 
-			fgseg::bgs avsa_bgs(tau, alpha, selective_bkg_update, threshold_ghosts2, rgb, alpha_sh, beta_sh, saturation_th, hue_th); //construct object of the bgs class
+			double sigma_coef = 6.;
+
+			fgseg::bgs avsa_bgs(tau, alpha, selective_bkg_update, threshold_ghosts2, rgb, alpha_sh, beta_sh, saturation_th, hue_th, sigma_coef); //construct object of the bgs class
 			//Lab1.1.2 fgseg::bgs avsa_bgs(tau, alpha, selective_bkg_update, rgb); //construct object of the bgs class
 			//Lab1.1.3 fgseg::bgs avsa_bgs(tau, alpha, selective_bkg_update, threshold_ghosts2, rgb); //construct object of the bgs class
 			// END - TO CHANGE FOR DIFF PROJECTS
