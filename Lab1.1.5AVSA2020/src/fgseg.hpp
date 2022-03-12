@@ -38,6 +38,9 @@ namespace fgseg {
 		//method to detect and remove shadows in the binary BGS mask
 		void removeShadows();
 
+		//unimodal gaussian
+		void updateGaussian(cv::Mat Frame, int frame_idx);
+
 		//returns the BG image
 		cv::Mat getBG(){return _bkg;};
 
@@ -65,8 +68,12 @@ namespace fgseg {
 		cv::Mat _fgmask; //binary image for foreground (FG)
 
 		cv::Mat _fgcounter; //foreground counter per pixel
-		cv::Mat _mean; //foreground counter per pixel
-		cv::Mat _std; //foreground counter per pixel
+
+		cv::Mat _mean; //mean value per pixel
+		cv::Mat _variance; //variance per pixel
+		cv::Mat _sum; //sum of pixels
+		cv::Mat _sum_squares; //sum of square of pixels
+
 
 		bool _rgb;
 		double _threshold;

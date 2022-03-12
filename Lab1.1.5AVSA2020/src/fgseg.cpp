@@ -42,6 +42,9 @@ void bgs::init_bkg(cv::Mat Frame)
 
 	_bkg = Frame.clone();
 	_fgcounter = Mat::zeros(Size(Frame.cols, Frame.rows), CV_16UC1);
+
+	_sum = Mat::zeros(Size(Frame.cols, Frame.rows), CV_8UC3);
+	_sum_squares = Mat::zeros(Size(Frame.cols, Frame.rows), CV_8UC3);
 }
 
 //method to perform BackGroundSubtraction
@@ -98,7 +101,7 @@ void bgs::bkgSubtraction(cv::Mat Frame)
 		split(bgsmask_rgb, rgbimg);
 		_bgsmask = rgbimg[0] + rgbimg[1] + rgbimg[2];
 
-		if (_selective_bkg_update)
+		if(_selective_bkg_update)
 		{
 			for(int i=0; i<_bgsmask.rows; ++i)
 				for(int j=0; j<_bgsmask.cols; ++j)
@@ -106,6 +109,10 @@ void bgs::bkgSubtraction(cv::Mat Frame)
 					if (!_bgsmask.at<uchar>(i, j))
 						_bkg.at<Vec3b>(i, j) = _alpha * Frame.at<Vec3b>(i, j) + (1 - _alpha) * _bkg.at<Vec3b>(i, j);
 				}
+		}
+		else if(_unimodal)
+		{
+
 		}
 		else
 			_bkg = _alpha * Frame + (1 - _alpha) * _bkg;
@@ -171,7 +178,23 @@ void bgs::removeShadows()
 	absdiff(_bgsmask, _shadowmask, _fgmask); // eliminates shadows from bgsmask
 }
 
-//ADD ADDITIONAL FUNCTIONS HERE
+void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
+{
+	// https://math.stackexchange.com/questions/2148877/iterative-calculation-of-mean-and-standard-deviation
+	Frame.copyTo(_frame);
+	if (frame_idx <= 10){
+		_sum += _frame;
+		_sum_squares +=  _frame.mul(_frame);
+		_mean = _sum / frame_idx;
+		_variance = (_sum_squares / frame_idx) - ( _mean.mul(_mean));
+	}
+	else{
+
+		_mean = _alpha * _frame + (1 - _alpha) * _mean;
+		_variance = _alpha * (_frame - _mean) + (1 - _alpha) * _variance;
+	}
+}
+
 
 
 
