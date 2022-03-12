@@ -121,8 +121,8 @@ int main(int argc, char ** argv)
 
 			double alpha_sh = 0.5;
 			double beta_sh = 0.9;
-			int saturation_th = 80;
-			int hue_th = 70;
+			double saturation_th = 80;
+			double hue_th = 70;
 
 
 			fgseg::bgs avsa_bgs(tau, alpha, selective_bkg_update, threshold_ghosts2, rgb, alpha_sh, beta_sh, saturation_th, hue_th); //construct object of the bgs class
