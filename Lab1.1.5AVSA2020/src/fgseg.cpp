@@ -11,6 +11,7 @@
 #include "fgseg.hpp"
 #include <stdlib.h>
 #include <algorithm>
+#include <cmath>
 
 using namespace fgseg;
 
@@ -43,8 +44,17 @@ void bgs::init_bkg(cv::Mat Frame)
 	_bkg = Frame.clone();
 	_fgcounter = Mat::zeros(Size(Frame.cols, Frame.rows), CV_16UC1);
 
-	_sum = Mat::zeros(Size(Frame.cols, Frame.rows), CV_8UC3);
-	_sum_squares = Mat::zeros(Size(Frame.cols, Frame.rows), CV_8UC3);
+
+
+//	_sum = Mat::zeros(Size(Frame.cols, Frame.rows), CV_8UC3);
+//	_sum_squares = Mat::zeros(Size(Frame.cols, Frame.rows), CV_8UC3);
+
+	// DOUBLES
+	_sum = Mat::zeros(Size(Frame.cols, Frame.rows), CV_64F);
+	_sum_squares = Mat::zeros(Size(Frame.cols, Frame.rows), CV_64F);
+
+
+
 }
 
 //method to perform BackGroundSubtraction
@@ -110,10 +120,7 @@ void bgs::bkgSubtraction(cv::Mat Frame)
 						_bkg.at<Vec3b>(i, j) = _alpha * Frame.at<Vec3b>(i, j) + (1 - _alpha) * _bkg.at<Vec3b>(i, j);
 				}
 		}
-		else if(_unimodal)
-		{
 
-		}
 		else
 			_bkg = _alpha * Frame + (1 - _alpha) * _bkg;
 
@@ -181,18 +188,50 @@ void bgs::removeShadows()
 void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 {
 	// https://math.stackexchange.com/questions/2148877/iterative-calculation-of-mean-and-standard-deviation
-	Frame.copyTo(_frame);
-	if (frame_idx <= 10){
-		_sum += _frame;
-		_sum_squares +=  _frame.mul(_frame);
-		_mean = _sum / frame_idx;
-		_variance = (_sum_squares / frame_idx) - ( _mean.mul(_mean));
-	}
-	else{
+	if (!_rgb){
+		cvtColor(Frame, Frame, COLOR_BGR2GRAY); // to work with gray even if input is color
+		Frame.copyTo(_frame);
+		_bgsmask = Mat::zeros(Size(Frame.cols, Frame.rows), CV_8UC1);
+		_diff = Mat::zeros(Size(Frame.cols, Frame.rows), CV_8UC1);
 
-		_mean = _alpha * _frame + (1 - _alpha) * _mean;
-		_variance = _alpha * (_frame - _mean) + (1 - _alpha) * _variance;
-	}
+		// DOUBLES
+		Mat diff;
+		Frame.convertTo(Frame, CV_64F);
+
+
+
+		// Set initial values with the 10 first frames
+		if (frame_idx <= 10){
+
+			_sum += Frame;
+			_sum_squares +=  Frame.mul(Frame);
+			_mean = _sum / frame_idx;
+			_variance = (_sum_squares / frame_idx) - (_mean.mul(_mean));
+
+		}
+		else{
+
+			absdiff(Frame,_mean,diff);
+
+			for(int i=0; i<_bgsmask.rows; i++)
+				for(int j=0; j<_bgsmask.cols; j++)
+
+					if(diff.at<double>(i,j) > 6 * sqrt(_variance.at<double>(i,j))){ // we can play with this value
+						_bgsmask.at<uchar>(i,j) = 255;
+//						_mean.at<double>(i,j) = _alpha * Frame.at<double>(i,j) + (1 - _alpha) * _mean.at<double>(i,j);
+//						_variance.at<double>(i,j) = _alpha * pow(Frame.at<double>(i,j) - _mean.at<double>(i,j), 2)+ (1 - _alpha) * _variance.at<double>(i,j);
+					}
+					else{
+						_bgsmask.at<uchar>(i,j) = 0;
+						_mean.at<double>(i,j) = _alpha * Frame.at<double>(i,j) + (1 - _alpha) * _mean.at<double>(i,j);
+						_variance.at<double>(i,j) = _alpha * pow(Frame.at<double>(i,j) - _mean.at<double>(i,j), 2)+ (1 - _alpha) * _variance.at<double>(i,j);
+					}
+
+			// from double to uchar so it can be displayed
+			diff.convertTo(_diff, CV_8UC1);
+
+			}
+		}
 }
 
 
