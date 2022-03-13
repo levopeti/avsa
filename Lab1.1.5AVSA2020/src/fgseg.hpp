@@ -24,7 +24,9 @@ namespace fgseg {
 	public:
 
 		//constructor with parameter "threshold"
-		bgs(double threshold, double alpha, bool selective_bkg_update, int threshold_ghosts2, bool rgb, double alpha_sh, double beta_sh, double saturation_th, double hue_th, double sigma_coef);
+		bgs(double threshold, double alpha, bool selective_bkg_update, int threshold_ghosts2, bool rgb,
+				double alpha_sh, double beta_sh, double saturation_th, double hue_th, double sigma_coef,
+				bool unimodal, int K);
 
 		//destructor
 		~bgs(void);
@@ -73,6 +75,7 @@ namespace fgseg {
 		cv::Mat _variance; //variance per pixel
 		cv::Mat _sum; //sum of pixels
 		cv::Mat _sum_squares; //sum of square of pixels
+		cv::Mat _omega; //number of pixel within the gaussian's interval
 
 
 		bool _rgb;
@@ -87,6 +90,8 @@ namespace fgseg {
 		int _hue_th;
 
 		double _sigma_coef;
+		bool _unimodal;
+		int _K;
 
 	};//end of class bgs
 
