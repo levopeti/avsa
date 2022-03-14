@@ -131,7 +131,7 @@ int main(int argc, char ** argv)
 			double sigma_coef = 3.; // we can play with this value
 			bool unimodal = false;
 			int K = 3; // 3, 4 or 5
-			double initial_variance = 10.1;
+			double initial_variance = 30;
 
 			fgseg::bgs avsa_bgs(tau, alpha, selective_bkg_update, threshold_ghosts2, rgb, alpha_sh,
 					beta_sh, saturation_th, hue_th, sigma_coef, unimodal, K, initial_variance);

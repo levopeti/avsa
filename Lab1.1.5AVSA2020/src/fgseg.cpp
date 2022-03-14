@@ -280,10 +280,10 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 								_variance_mm[k].at<double>(i,j) = _alpha * pow(Frame.at<double>(i,j) - _mean_mm[k].at<double>(i,j), 2)+ (1 - _alpha) * _variance_mm[k].at<double>(i,j);
 							}
 //							cout << int(M[k].at<uchar>(i,j)) << endl << endl;
-							omega_mm_tmp[k].at<double>(i,j) = (1 - _alpha) * _omega_mm[k].at<double>(i,j) + _alpha * M[k].at<uchar>(i,j);
-						}
+							omega_mm_tmp[k].at<double>(i,j) = (1 - _alpha) * _omega_mm[k].at<double>(i,j) + _alpha * int(M[k].at<uchar>(i,j));
+						}}
 				//cout << 123 << endl;
-				for(int i=0; i<_bgsmask.rows; i++)
+				for(int i=0; i<_bgsmask.rows; i++){
 					for(int j=0; j<_bgsmask.cols; j++){
 						double sum = 0;
 						for(int k=0; k<_K; k++){
@@ -292,9 +292,9 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 						for(int k=0; k<_K; k++){
 							omega_mm_tmp[k].at<double>(i, j) /= sum;
 						}
-					}
+					}}
 				//cout << 124 << endl;
-				for(int i=0; i<_bgsmask.rows; i++)
+				for(int i=0; i<_bgsmask.rows; i++){
 					for(int j=0; j<_bgsmask.cols; j++){
 						//cout << 131 << endl;
 						int min_arg = -1;
@@ -303,7 +303,7 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 //							cout << k << endl;
 //							cout << omega_mm_tmp[k].at<double>(i, j) << endl;
 //							cout << M[k].at<double>(i, j) << endl << endl;;
-							if(M[k].at<double>(i, j) && omega_mm_tmp[k].at<double>(i, j) >= (1 - W_th)){
+							if(int(M[k].at<uchar>(i, j)) && omega_mm_tmp[k].at<double>(i, j) >= (1 - W_th)){
 								_bgsmask.at<uchar>(i, j) = 0;
 								break;
 							}
@@ -321,8 +321,17 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 							omega_mm_tmp[min_arg].at<double>(i, j) = 0.05;
 							_mean_mm[min_arg].at<double>(i,j) = Frame.at<double>(i,j);
 							_variance_mm[min_arg].at<double>(i,j) = _initial_variance;
+
+							double sum = 0;
+							for(int k=0; k<_K; k++){
+								sum += omega_mm_tmp[k].at<double>(i, j);
+								}
+							for(int k=0; k<_K; k++){
+								omega_mm_tmp[k].at<double>(i, j) /= sum;
+							}
 						}
-					}
+					}}
+
 				//cout << 125 << endl;
 				for(int k=0; k<_K; k++){
 					_omega_mm[k] = omega_mm_tmp[k];
@@ -330,11 +339,13 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 
 				}
 
+
+
 			}
 
 		}
 
-		}
+
 }
 
 
