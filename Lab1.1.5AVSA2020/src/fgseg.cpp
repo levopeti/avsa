@@ -231,72 +231,83 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 						}
 			}
 
-			if(_selective_bkg_update){
-			}
-			else{
-				// from here it is just a copy
-				cv::Mat M_tmp = Mat::zeros(Size(Frame.cols, Frame.rows), CV_8UC(_K));
-				cv::Mat M[_K];
-				split(M_tmp, M);
 
-				cv::Mat omega_mm_tmp_tmp = Mat::zeros(Size(Frame.cols, Frame.rows), CV_64FC(_K));
-				cv::Mat omega_mm_tmp[_K];
-				split(omega_mm_tmp_tmp, omega_mm_tmp);
+			// from here it is just a copy
+			cv::Mat M_tmp = Mat::zeros(Size(Frame.cols, Frame.rows), CV_8UC(_K));
+			cv::Mat M[_K];
+			split(M_tmp, M);
 
-				cv::Mat diff_tmp = Mat::zeros(Size(Frame.cols, Frame.rows), CV_64FC(_K));
-				cv::Mat diff[_K];
+			cv::Mat omega_mm_tmp_tmp = Mat::zeros(Size(Frame.cols, Frame.rows), CV_64FC(_K));
+			cv::Mat omega_mm_tmp[_K];
+			split(omega_mm_tmp_tmp, omega_mm_tmp);
+
+			cv::Mat diff_tmp = Mat::zeros(Size(Frame.cols, Frame.rows), CV_64FC(_K));
+			cv::Mat diff[_K];
 
 
-				for(int k=0; k<_K; k++){
-					absdiff(Frame, _mean_mm[k], diff[k]);
-
-					for(int i=0; i<_bgsmask.rows; i++)
-						for(int j=0; j<_bgsmask.cols; j++){
-							if(diff[k].at<double>(i, j) <= _sigma_coef * sqrt(_variance_mm[k].at<double>(i, j))){
-								M[k].at<uchar>(i, j) = 1;
-								_mean_mm[k].at<double>(i, j) = _alpha * Frame.at<double>(i,j) + (1 - _alpha) * _mean_mm[k].at<double>(i, j);
-								_variance_mm[k].at<double>(i, j) = _alpha * pow(Frame.at<double>(i, j) - _mean_mm[k].at<double>(i, j), 2)+ (1 - _alpha) * _variance_mm[k].at<double>(i, j);
-							}
-							omega_mm_tmp[k].at<double>(i,j) = (1 - _alpha) * _omega_mm[k].at<double>(i,j) + _alpha * int(M[k].at<uchar>(i,j));
-						}}
+			for(int k=0; k<_K; k++){
+				absdiff(Frame, _mean_mm[k], diff[k]);
 
 				for(int i=0; i<_bgsmask.rows; i++)
 					for(int j=0; j<_bgsmask.cols; j++){
-						double sum = 0;
-
-						for(int k=0; k<_K; k++){
-							sum += omega_mm_tmp[k].at<double>(i, j);
+						if(diff[k].at<double>(i, j) <= _sigma_coef * sqrt(_variance_mm[k].at<double>(i, j))){
+							M[k].at<uchar>(i, j) = 1;
+							_mean_mm[k].at<double>(i, j) = _alpha * Frame.at<double>(i,j) + (1 - _alpha) * _mean_mm[k].at<double>(i, j);
+							_variance_mm[k].at<double>(i, j) = _alpha * pow(Frame.at<double>(i, j) - _mean_mm[k].at<double>(i, j), 2)+ (1 - _alpha) * _variance_mm[k].at<double>(i, j);
 						}
+						omega_mm_tmp[k].at<double>(i,j) = (1 - _alpha) * _omega_mm[k].at<double>(i,j) + _alpha * int(M[k].at<uchar>(i,j));
+					}}
 
-						for(int k=0; k<_K; k++){
-							omega_mm_tmp[k].at<double>(i, j) /= sum;
+			for(int i=0; i<_bgsmask.rows; i++)
+				for(int j=0; j<_bgsmask.cols; j++){
+					double sum = 0;
+
+					for(int k=0; k<_K; k++){
+						sum += omega_mm_tmp[k].at<double>(i, j);
+					}
+
+					for(int k=0; k<_K; k++){
+						omega_mm_tmp[k].at<double>(i, j) /= sum;
+					}
+				}
+
+			for(int i=0; i<_bgsmask.rows; i++){
+				for(int j=0; j<_bgsmask.cols; j++){
+					int min_arg = -1;
+					double min_value = 1;
+
+					for(int k=0; k<_K; k++){
+						if(int(M[k].at<uchar>(i, j)) && omega_mm_tmp[k].at<double>(i, j) >= (1 - _W_th)){
+							_bgsmask.at<uchar>(i, j) = 0;
+							break;
+						}
+						else{
+							_bgsmask.at<uchar>(i, j) = 255;
+						}
+						if(omega_mm_tmp[k].at<double>(i, j) < min_value){
+							min_value = omega_mm_tmp[k].at<double>(i, j);
+							min_arg = k;
 						}
 					}
 
-				for(int i=0; i<_bgsmask.rows; i++){
-					for(int j=0; j<_bgsmask.cols; j++){
-						int min_arg = -1;
-						double min_value = 1;
+					if(_bgsmask.at<uchar>(i, j) == 255){
 
-						for(int k=0; k<_K; k++){
-							if(int(M[k].at<uchar>(i, j)) && omega_mm_tmp[k].at<double>(i, j) >= (1 - _W_th)){
-								_bgsmask.at<uchar>(i, j) = 0;
-								break;
-							}
-							else{
-								_bgsmask.at<uchar>(i, j) = 255;
-							}
-							if(omega_mm_tmp[k].at<double>(i, j) < min_value){
-								min_value = omega_mm_tmp[k].at<double>(i, j);
-								min_arg = k;
-							}
+						int sum_match = 0;
+						if(_selective_bkg_update)
+							sum_match = 1;
+						else{// BLIND MODE
+							// Check if the pixel belongs to any of the gaussians being foreground
+							for(int k=0; k<_K; k++){
+								if(int(M[k].at<uchar>(i,j))==1)
+									sum_match+=1;}
 						}
-
-						if(_bgsmask.at<uchar>(i, j) == 255){
+						// Remove and create new gaussian if the pixel doesn't belong to any
+						if(!sum_match){
 							omega_mm_tmp[min_arg].at<double>(i, j) = 0.05;
 							_mean_mm[min_arg].at<double>(i,j) = Frame.at<double>(i,j);
 							_variance_mm[min_arg].at<double>(i,j) = _initial_variance;
 
+							// Renormalize weights
 							double sum = 0;
 							for(int k=0; k<_K; k++){
 								sum += omega_mm_tmp[k].at<double>(i, j);
@@ -304,17 +315,18 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 							for(int k=0; k<_K; k++){
 								omega_mm_tmp[k].at<double>(i, j) /= sum;
 							}
+							}
 						}
 					}
-				}
+			}
 
-				for(int k=0; k<_K; k++){
-					_omega_mm[k] = omega_mm_tmp[k];
-				}
-				}
+			for(int k=0; k<_K; k++){
+				_omega_mm[k] = omega_mm_tmp[k];}
+
 			}
 		}
 }
+
 
 
 
