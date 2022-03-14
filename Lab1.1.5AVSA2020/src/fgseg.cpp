@@ -74,7 +74,6 @@ void bgs::init_bkg(cv::Mat Frame)
 //method to perform BackGroundSubtraction
 void bgs::bkgSubtraction(cv::Mat Frame)
 {
-
 	if(!_rgb){
 		cvtColor(Frame, Frame, COLOR_BGR2GRAY); // to work with gray even if input is color
 		Frame.copyTo(_frame);
@@ -160,7 +159,6 @@ void bgs::removeShadows()
 	}
 	else{
 		// init Shadow Mask (currently Shadow Detection not implemented)
-	//	_bgsmask.copyTo(_shadowmask); // creates the mask (currently with bgs)
 		_shadowmask = Mat::zeros(Size(_bgsmask.cols, _bgsmask.rows), CV_8UC1);
 
 		cv::Mat _frame_HSV;
@@ -208,6 +206,7 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 		Frame.convertTo(Frame, CV_64F);
 		_bgsmask = Mat::zeros(Size(Frame.cols, Frame.rows), CV_8UC1);
 		_diff = Mat::zeros(Size(Frame.cols, Frame.rows), CV_8UC1);
+
 		if (_unimodal){
 			// Set initial values with the 10 first frames
 			if (frame_idx <= 10){
@@ -244,7 +243,7 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 					for(int j=0; j<_bgsmask.cols; j++){
 						_mean_mm[0].at<double>(i,j) = Frame.at<double>(i,j);
 						_variance_mm[0].at<double>(i,j) = _initial_variance;
-						_omega_mm[0].at<double>(i,j) = 1;
+						_omega_mm[0].at<double>(i,j) = 1.;
 						}
 			}
 			//cout << 121 << endl;
@@ -274,21 +273,25 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 //							cout << k << endl;
 //							cout << diff[k].at<double>(i,j) << endl;
 //							cout << _sigma_coef * sqrt(_variance_mm[k].at<double>(i,j)) << endl;
-							if(diff[k].at<double>(i,j) <= _sigma_coef * sqrt(_variance_mm[k].at<double>(i,j))){
-								M[k].at<uchar>(i,j) = 1;
-								_mean_mm[k].at<double>(i,j) = _alpha * Frame.at<double>(i,j) + (1 - _alpha) * _mean_mm[k].at<double>(i,j);
-								_variance_mm[k].at<double>(i,j) = _alpha * pow(Frame.at<double>(i,j) - _mean_mm[k].at<double>(i,j), 2)+ (1 - _alpha) * _variance_mm[k].at<double>(i,j);
+							if(diff[k].at<double>(i, j) <= _sigma_coef * sqrt(_variance_mm[k].at<double>(i, j))){
+								M[k].at<uchar>(i, j) = 1;
+								_mean_mm[k].at<double>(i, j) = _alpha * Frame.at<double>(i,j) + (1 - _alpha) * _mean_mm[k].at<double>(i, j);
+								_variance_mm[k].at<double>(i, j) = _alpha * pow(Frame.at<double>(i, j) - _mean_mm[k].at<double>(i, j), 2)+ (1 - _alpha) * _variance_mm[k].at<double>(i, j);
 							}
 //							cout << int(M[k].at<uchar>(i,j)) << endl << endl;
+
 							omega_mm_tmp[k].at<double>(i,j) = (1 - _alpha) * _omega_mm[k].at<double>(i,j) + _alpha * int(M[k].at<uchar>(i,j));
 						}}
+
 				//cout << 123 << endl;
 				for(int i=0; i<_bgsmask.rows; i++){
 					for(int j=0; j<_bgsmask.cols; j++){
 						double sum = 0;
+
 						for(int k=0; k<_K; k++){
 							sum += omega_mm_tmp[k].at<double>(i, j);
 						}
+
 						for(int k=0; k<_K; k++){
 							omega_mm_tmp[k].at<double>(i, j) /= sum;
 						}
@@ -299,10 +302,13 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 						//cout << 131 << endl;
 						int min_arg = -1;
 						double min_value = 1;
+
 						for(int k=0; k<_K; k++){
 //							cout << k << endl;
 //							cout << omega_mm_tmp[k].at<double>(i, j) << endl;
-//							cout << M[k].at<double>(i, j) << endl << endl;;
+
+//							cout << M[k].at<double>(i, j) << endl << endl;
+
 							if(int(M[k].at<uchar>(i, j)) && omega_mm_tmp[k].at<double>(i, j) >= (1 - W_th)){
 								_bgsmask.at<uchar>(i, j) = 0;
 								break;
@@ -316,7 +322,7 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 								min_arg = k;
 							}
 						}
-						//cout << 134 << endl;
+
 						if(_bgsmask.at<uchar>(i, j) == 255){
 							omega_mm_tmp[min_arg].at<double>(i, j) = 0.05;
 							_mean_mm[min_arg].at<double>(i,j) = Frame.at<double>(i,j);
@@ -329,6 +335,8 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 							for(int k=0; k<_K; k++){
 								omega_mm_tmp[k].at<double>(i, j) /= sum;
 							}
+
+
 						}
 					}}
 
@@ -337,6 +345,7 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 					_omega_mm[k] = omega_mm_tmp[k];
 				}
 
+
 				}
 
 
@@ -344,9 +353,8 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 			}
 
 		}
-
-
 }
+
 
 
 
