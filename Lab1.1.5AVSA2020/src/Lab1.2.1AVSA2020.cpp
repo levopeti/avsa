@@ -118,7 +118,7 @@ int main(int argc, char ** argv)
 			// TO CHANGE (comment/uncomment/...) FOR DIFF PROJECTS
 			//background subtraction parameters
 			double tau = 20; // to set ... //Lab1.1.1-3
-			double alpha = 0.1; // to set ... //Lab1.1.2-3
+			double alpha = 0.05; // to set ... //Lab1.1.2-3
 			bool selective_bkg_update = false; // true ... //Lab1.1.2-3
 			int threshold_ghosts2 = 25; // to set ... //Lab1.1.3
 			bool rgb = false; //true false;
@@ -128,13 +128,14 @@ int main(int argc, char ** argv)
 			double saturation_th = 80;
 			double hue_th = 70;
 
-			double sigma_coef = 4.; // we can play with this value
-			bool unimodal = false;
+			double sigma_coef = 8.; // we can play with this value
+			bool unimodal = true;
 			int K = 3; // 3, 4 or 5
-			double initial_variance = 30;
+			double initial_variance = 10.1;
+			double W_th = 0.9;
 
 			fgseg::bgs avsa_bgs(tau, alpha, selective_bkg_update, threshold_ghosts2, rgb, alpha_sh,
-					beta_sh, saturation_th, hue_th, sigma_coef, unimodal, K, initial_variance);
+					beta_sh, saturation_th, hue_th, sigma_coef, unimodal, K, initial_variance, W_th);
 			//construct object of the bgs class
 			//Lab1.1.2 fgseg::bgs avsa_bgs(tau, alpha, selective_bkg_update, rgb); //construct object of the bgs class
 			//Lab1.1.3 fgseg::bgs avsa_bgs(tau, alpha, selective_bkg_update, threshold_ghosts2, rgb); //construct object of the bgs class
@@ -165,12 +166,9 @@ int main(int argc, char ** argv)
            		t = (double)getTickCount();
 
            		//Apply your bgs algorithm
-           		//cout << 111 << endl;
 		        avsa_bgs.updateGaussian(img, it);
-		        //cout << 222 << endl;
            		//avsa_bgs.bkgSubtraction(img);
 		        avsa_bgs.removeShadows();
-		        //cout << 333 << endl;
 
 				//...
 

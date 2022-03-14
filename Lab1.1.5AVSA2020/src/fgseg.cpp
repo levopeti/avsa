@@ -19,7 +19,7 @@ using namespace fgseg;
 //default constructor
 bgs::bgs(double threshold, double alpha, bool selective_bkg_update, int threshold_ghosts2,
 		bool rgb, double alpha_sh, double beta_sh, double saturation_th, double hue_th,
-		double sigma_coef, bool unimodal, int K, double initial_variance)
+		double sigma_coef, bool unimodal, int K, double initial_variance, double W_th)
 {
 	_threshold=threshold;
 	_alpha=alpha;
@@ -34,6 +34,7 @@ bgs::bgs(double threshold, double alpha, bool selective_bkg_update, int threshol
 	_unimodal = unimodal;
 	_K = K;
 	_initial_variance = initial_variance;
+	_W_th = W_th;
 }
 
 //default destructor
@@ -44,17 +45,11 @@ bgs::~bgs(void)
 //method to initialize bkg (first frame - hot start)
 void bgs::init_bkg(cv::Mat Frame)
 {
-
 	if(!_rgb)
 		cvtColor(Frame, Frame, COLOR_BGR2GRAY); // to work with gray even if input is color
 
 	_bkg = Frame.clone();
 	_fgcounter = Mat::zeros(Size(Frame.cols, Frame.rows), CV_16UC1);
-
-
-
-//	_sum = Mat::zeros(Size(Frame.cols, Frame.rows), CV_8UC3);
-//	_sum_squares = Mat::zeros(Size(Frame.cols, Frame.rows), CV_8UC3);
 
 	// DOUBLES
 	_sum = Mat::zeros(Size(Frame.cols, Frame.rows), CV_64F);
@@ -67,8 +62,6 @@ void bgs::init_bkg(cv::Mat Frame)
 			_omega_mm.push_back(Mat::zeros(Size(Frame.cols, Frame.rows), CV_64F));
 		}
 	}
-
-
 }
 
 //method to perform BackGroundSubtraction
@@ -113,13 +106,6 @@ void bgs::bkgSubtraction(cv::Mat Frame)
 
 		absdiff(_bkg, Frame, _diff);
 		threshold(_diff, bgsmask_rgb, _threshold, 255, cv::THRESH_BINARY);
-
-//		for(int j=0; j<bgsmask_rgb.rows; ++j)
-//			for(int i=0; i<bgsmask_rgb.cols; ++i)
-//			{
-//				if (bgsmask_rgb.at<cv::Vec3b>(j, i)[0] || bgsmask_rgb.at<cv::Vec3b>(j, i)[1] || bgsmask_rgb.at<cv::Vec3b>(j, i)[2])
-//					_bgsmask.at<uchar>(j, i) = 255;
-//			}
 
 		split(bgsmask_rgb, rgbimg);
 		_bgsmask = rgbimg[0] + rgbimg[1] + rgbimg[2];
@@ -179,7 +165,6 @@ void bgs::removeShadows()
 
 				double Dh = min(abs(IH - BH), 360 - abs(IH - BH));
 
-
 				if ((IV / BV) >= _alpha_sh && (IV / BV) <= _beta_sh && abs(IS - BS) <= _saturation_th && Dh <= _hue_th){
 					_shadowmask.at<uchar>(j, i) = 255;
 				}
@@ -189,7 +174,7 @@ void bgs::removeShadows()
 		for(int i=0; i<_bgsmask.rows; i++){
 			for(int j=0; j<_bgsmask.cols; j++)
 			{
-				_shadowmask.at<uchar>(i,j) = _shadowmask.at<uchar>(i,j) * _bgsmask.at<uchar>(i,j) * 255;
+				_shadowmask.at<uchar>(i, j) = _shadowmask.at<uchar>(i, j) * int(_bgsmask.at<uchar>(i, j));
 			}
 		}
 	}
@@ -238,7 +223,6 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 		}
 		else{
 			if (frame_idx == 1){
-				//cout << 120 << endl;
 				for(int i=0; i<_bgsmask.rows; i++)
 					for(int j=0; j<_bgsmask.cols; j++){
 						_mean_mm[0].at<double>(i,j) = Frame.at<double>(i,j);
@@ -246,12 +230,10 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 						_omega_mm[0].at<double>(i,j) = 1.;
 						}
 			}
-			//cout << 121 << endl;
-			double W_th = 0.9;
+
 			if(_selective_bkg_update){
 			}
 			else{
-				//cout << 122 << endl;
 				// from here it is just a copy
 				cv::Mat M_tmp = Mat::zeros(Size(Frame.cols, Frame.rows), CV_8UC(_K));
 				cv::Mat M[_K];
@@ -270,21 +252,15 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 
 					for(int i=0; i<_bgsmask.rows; i++)
 						for(int j=0; j<_bgsmask.cols; j++){
-//							cout << k << endl;
-//							cout << diff[k].at<double>(i,j) << endl;
-//							cout << _sigma_coef * sqrt(_variance_mm[k].at<double>(i,j)) << endl;
 							if(diff[k].at<double>(i, j) <= _sigma_coef * sqrt(_variance_mm[k].at<double>(i, j))){
 								M[k].at<uchar>(i, j) = 1;
 								_mean_mm[k].at<double>(i, j) = _alpha * Frame.at<double>(i,j) + (1 - _alpha) * _mean_mm[k].at<double>(i, j);
 								_variance_mm[k].at<double>(i, j) = _alpha * pow(Frame.at<double>(i, j) - _mean_mm[k].at<double>(i, j), 2)+ (1 - _alpha) * _variance_mm[k].at<double>(i, j);
 							}
-//							cout << int(M[k].at<uchar>(i,j)) << endl << endl;
-
 							omega_mm_tmp[k].at<double>(i,j) = (1 - _alpha) * _omega_mm[k].at<double>(i,j) + _alpha * int(M[k].at<uchar>(i,j));
 						}}
 
-				//cout << 123 << endl;
-				for(int i=0; i<_bgsmask.rows; i++){
+				for(int i=0; i<_bgsmask.rows; i++)
 					for(int j=0; j<_bgsmask.cols; j++){
 						double sum = 0;
 
@@ -295,28 +271,21 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 						for(int k=0; k<_K; k++){
 							omega_mm_tmp[k].at<double>(i, j) /= sum;
 						}
-					}}
-				//cout << 124 << endl;
+					}
+
 				for(int i=0; i<_bgsmask.rows; i++){
 					for(int j=0; j<_bgsmask.cols; j++){
-						//cout << 131 << endl;
 						int min_arg = -1;
 						double min_value = 1;
 
 						for(int k=0; k<_K; k++){
-//							cout << k << endl;
-//							cout << omega_mm_tmp[k].at<double>(i, j) << endl;
-
-//							cout << M[k].at<double>(i, j) << endl << endl;
-
-							if(int(M[k].at<uchar>(i, j)) && omega_mm_tmp[k].at<double>(i, j) >= (1 - W_th)){
+							if(int(M[k].at<uchar>(i, j)) && omega_mm_tmp[k].at<double>(i, j) >= (1 - _W_th)){
 								_bgsmask.at<uchar>(i, j) = 0;
 								break;
 							}
 							else{
 								_bgsmask.at<uchar>(i, j) = 255;
 							}
-							//cout << 133 << endl;
 							if(omega_mm_tmp[k].at<double>(i, j) < min_value){
 								min_value = omega_mm_tmp[k].at<double>(i, j);
 								min_arg = k;
@@ -335,23 +304,15 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 							for(int k=0; k<_K; k++){
 								omega_mm_tmp[k].at<double>(i, j) /= sum;
 							}
-
-
 						}
-					}}
+					}
+				}
 
-				//cout << 125 << endl;
 				for(int k=0; k<_K; k++){
 					_omega_mm[k] = omega_mm_tmp[k];
 				}
-
-
 				}
-
-
-
 			}
-
 		}
 }
 
