@@ -244,10 +244,10 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 			cv::Mat diff_tmp = Mat::zeros(Size(Frame.cols, Frame.rows), CV_64FC(_K));
 			cv::Mat diff[_K];
 
-
 			for(int k=0; k<_K; k++){
 				absdiff(Frame, _mean_mm[k], diff[k]);
 
+				// normalize temp weights
 				for(int i=0; i<_bgsmask.rows; i++)
 					for(int j=0; j<_bgsmask.cols; j++){
 						if(diff[k].at<double>(i, j) <= _sigma_coef * sqrt(_variance_mm[k].at<double>(i, j))){
@@ -266,10 +266,14 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 						sum += omega_mm_tmp[k].at<double>(i, j);
 					}
 
+
 					for(int k=0; k<_K; k++){
 						omega_mm_tmp[k].at<double>(i, j) /= sum;
 					}
 				}
+
+				// set background mask
+
 
 			for(int i=0; i<_bgsmask.rows; i++){
 				for(int j=0; j<_bgsmask.cols; j++){
