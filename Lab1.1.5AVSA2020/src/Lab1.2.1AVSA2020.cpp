@@ -128,7 +128,7 @@ int main(int argc, char ** argv)
 			double saturation_th = 80;
 			double hue_th = 70;
 
-			double sigma_coef = 3.; // we can play with this value
+			double sigma_coef = 4.; // we can play with this value
 			bool unimodal = false;
 			int K = 3; // 3, 4 or 5
 			double initial_variance = 10.1;
@@ -168,7 +168,7 @@ int main(int argc, char ** argv)
            		//cout << 111 << endl;
 		        avsa_bgs.updateGaussian(img, it);
 		        //cout << 222 << endl;
-//           	avsa_bgs.bkgSubtraction(img);
+           		//avsa_bgs.bkgSubtraction(img);
 		        avsa_bgs.removeShadows();
 		        //cout << 333 << endl;
 
@@ -177,7 +177,7 @@ int main(int argc, char ** argv)
 		        //Time measurement
 		        t = (double)getTickCount() - t;
 //		        if (_CONSOLE_DEBUG) cout << "bgs_seg = " << 1000*t/t_freq << " milliseconds."<< endl;
-		        acum_t=+t;
+		        acum_t =+ t;
 
 		        Mat bg=avsa_bgs.getBG();
 		        Mat diff=avsa_bgs.getDiff();
