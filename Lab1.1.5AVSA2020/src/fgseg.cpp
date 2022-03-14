@@ -246,7 +246,7 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 				cv::Mat diff_tmp = Mat::zeros(Size(Frame.cols, Frame.rows), CV_64FC(_K));
 				cv::Mat diff[_K];
 
-
+				// update distributions
 				for(int k=0; k<_K; k++){
 					absdiff(Frame, _mean_mm[k], diff[k]);
 
@@ -260,6 +260,7 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 							omega_mm_tmp[k].at<double>(i,j) = (1 - _alpha) * _omega_mm[k].at<double>(i,j) + _alpha * int(M[k].at<uchar>(i,j));
 						}}
 
+				// normalize temp weights
 				for(int i=0; i<_bgsmask.rows; i++)
 					for(int j=0; j<_bgsmask.cols; j++){
 						double sum = 0;
@@ -273,6 +274,7 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 						}
 					}
 
+				// set background mask
 				for(int i=0; i<_bgsmask.rows; i++){
 					for(int j=0; j<_bgsmask.cols; j++){
 						int min_arg = -1;
@@ -292,6 +294,7 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 							}
 						}
 
+						// if the pixel is foreground, remove last distribution and renormalize temp weights
 						if(_bgsmask.at<uchar>(i, j) == 255){
 							omega_mm_tmp[min_arg].at<double>(i, j) = 0.05;
 							_mean_mm[min_arg].at<double>(i,j) = Frame.at<double>(i,j);
