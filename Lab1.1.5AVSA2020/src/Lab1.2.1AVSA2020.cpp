@@ -119,7 +119,7 @@ int main(int argc, char ** argv)
 			//background subtraction parameters
 			double tau = 20; // to set ... //Lab1.1.1-3
 			double alpha = 0.1; // to set ... //Lab1.1.2-3
-			bool selective_bkg_update = true; // true ... //Lab1.1.2-3
+			bool selective_bkg_update = false; // true ... //Lab1.1.2-3
 			int threshold_ghosts2 = 25; // to set ... //Lab1.1.3
 			bool rgb = false; //true false;
 
@@ -128,10 +128,10 @@ int main(int argc, char ** argv)
 			double saturation_th = 80;
 			double hue_th = 70;
 
-			double sigma_coef = 6.; // we can play with this value
+			double sigma_coef = 3.; // we can play with this value
 			bool unimodal = false;
 			int K = 3; // 3, 4 or 5
-			double initial_variance = 0.1;
+			double initial_variance = 10.1;
 
 			fgseg::bgs avsa_bgs(tau, alpha, selective_bkg_update, threshold_ghosts2, rgb, alpha_sh,
 					beta_sh, saturation_th, hue_th, sigma_coef, unimodal, K, initial_variance);
@@ -165,9 +165,12 @@ int main(int argc, char ** argv)
            		t = (double)getTickCount();
 
            		//Apply your bgs algorithm
+           		//cout << 111 << endl;
 		        avsa_bgs.updateGaussian(img, it);
-//           		avsa_bgs.bkgSubtraction(img);
+		        //cout << 222 << endl;
+//           	avsa_bgs.bkgSubtraction(img);
 		        avsa_bgs.removeShadows();
+		        //cout << 333 << endl;
 
 				//...
 
