@@ -15,10 +15,11 @@
 
 using namespace fgseg;
 
+
 //default constructor
 bgs::bgs(double threshold, double alpha, bool selective_bkg_update, int threshold_ghosts2,
 		bool rgb, double alpha_sh, double beta_sh, double saturation_th, double hue_th,
-		double sigma_coef, bool unimodal, int K)
+		double sigma_coef, bool unimodal, int K, double initial_variance)
 {
 	_threshold=threshold;
 	_alpha=alpha;
@@ -32,6 +33,7 @@ bgs::bgs(double threshold, double alpha, bool selective_bkg_update, int threshol
 	_sigma_coef = sigma_coef;
 	_unimodal = unimodal;
 	_K = K;
+	_initial_variance = initial_variance;
 }
 
 //default destructor
@@ -43,7 +45,7 @@ bgs::~bgs(void)
 void bgs::init_bkg(cv::Mat Frame)
 {
 
-	if (!_rgb)
+	if(!_rgb)
 		cvtColor(Frame, Frame, COLOR_BGR2GRAY); // to work with gray even if input is color
 
 	_bkg = Frame.clone();
@@ -58,6 +60,13 @@ void bgs::init_bkg(cv::Mat Frame)
 	_sum = Mat::zeros(Size(Frame.cols, Frame.rows), CV_64F);
 	_sum_squares = Mat::zeros(Size(Frame.cols, Frame.rows), CV_64F);
 
+	if(!_unimodal){ //CV_32FC(nbChannels)
+		for(int k=0; k< _K; k++){
+			_mean_mm.push_back(Mat::zeros(Size(Frame.cols, Frame.rows), CV_64F));
+			_variance_mm.push_back(Mat::zeros(Size(Frame.cols, Frame.rows), CV_64F));
+			_omega_mm.push_back(Mat::zeros(Size(Frame.cols, Frame.rows), CV_64F));
+		}
+	}
 
 
 }
@@ -66,7 +75,7 @@ void bgs::init_bkg(cv::Mat Frame)
 void bgs::bkgSubtraction(cv::Mat Frame)
 {
 
-	if (!_rgb){
+	if(!_rgb){
 		cvtColor(Frame, Frame, COLOR_BGR2GRAY); // to work with gray even if input is color
 		Frame.copyTo(_frame);
 
@@ -146,7 +155,7 @@ void bgs::bkgSubtraction(cv::Mat Frame)
 //method to detect and remove shadows in the BGS mask to create FG mask
 void bgs::removeShadows()
 {
-	if (!_rgb){
+	if(!_rgb){
 		absdiff(_bgsmask, _bgsmask, _shadowmask);// currently void function mask=0 (should create shadow mask)
 	}
 	else{
@@ -193,18 +202,13 @@ void bgs::removeShadows()
 void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 {
 	// https://math.stackexchange.com/questions/2148877/iterative-calculation-of-mean-and-standard-deviation
-	if (!_rgb){
+	if(!_rgb){
+		cvtColor(Frame, Frame, COLOR_BGR2GRAY); // to work with gray even if input is color
+		Frame.copyTo(_frame);
+		Frame.convertTo(Frame, CV_64F);
+		_bgsmask = Mat::zeros(Size(Frame.cols, Frame.rows), CV_8UC1);
+		_diff = Mat::zeros(Size(Frame.cols, Frame.rows), CV_8UC1);
 		if (_unimodal){
-			cvtColor(Frame, Frame, COLOR_BGR2GRAY); // to work with gray even if input is color
-			Frame.copyTo(_frame);
-			_bgsmask = Mat::zeros(Size(Frame.cols, Frame.rows), CV_8UC1);
-			_diff = Mat::zeros(Size(Frame.cols, Frame.rows), CV_8UC1);
-
-			// DOUBLES
-			Mat diff;
-			Frame.convertTo(Frame, CV_64F);
-
-
 			// Set initial values with the 10 first frames
 			if (frame_idx <= 10){
 				_sum += Frame;
@@ -213,11 +217,12 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 				_variance = (_sum_squares / frame_idx) - (_mean.mul(_mean));
 			}
 			else{
-				absdiff(Frame,_mean, diff);
+				Mat diff;
+				absdiff(Frame, _mean, diff);
 
 				for(int i=0; i<_bgsmask.rows; i++)
 					for(int j=0; j<_bgsmask.cols; j++)
-						if(diff.at<double>(i,j) > _sigma_coef * sqrt(_variance.at<double>(i,j))){ // we can play with this value
+						if(diff.at<double>(i,j) > _sigma_coef * sqrt(_variance.at<double>(i,j))){
 							_bgsmask.at<uchar>(i,j) = 255;
 //							_mean.at<double>(i,j) = _alpha * Frame.at<double>(i,j) + (1 - _alpha) * _mean.at<double>(i,j);
 //							_variance.at<double>(i,j) = _alpha * pow(Frame.at<double>(i,j) - _mean.at<double>(i,j), 2)+ (1 - _alpha) * _variance.at<double>(i,j);
@@ -233,6 +238,89 @@ void bgs::updateGaussian(cv::Mat Frame, int frame_idx)
 				}
 		}
 		else{
+			if (frame_idx == 1){
+				for(int i=0; i<_bgsmask.rows; i++)
+					for(int j=0; j<_bgsmask.cols; j++){
+						_mean_mm[0].at<double>(i,j) = Frame.at<double>(i,j);
+						_variance_mm[0].at<double>(i,j) = _initial_variance;
+						_omega_mm[0].at<double>(i,j) = 1;
+						}
+			}
+			double W_th = 0.9;
+			if(_selective_bkg_update){
+			}
+			else{
+				// from here it is just a copy
+				cv::Mat M_tmp = Mat::zeros(Size(Frame.cols, Frame.rows), CV_64FC(_K));
+				cv::Mat M[_K];
+				split(M_tmp, M);
+
+				cv::Mat omega_mm_tmp_tmp = Mat::zeros(Size(Frame.cols, Frame.rows), CV_64FC(_K));
+				cv::Mat omega_mm_tmp[_K];
+				split(omega_mm_tmp_tmp, omega_mm_tmp);
+
+				cv::Mat diff_tmp = Mat::zeros(Size(Frame.cols, Frame.rows), CV_64FC(_K));
+				cv::Mat diff[_K];
+
+
+				for(int k=0; k<_K; k++){
+					absdiff(Frame, _mean_mm[k], diff[k]);
+
+					for(int i=0; i<_bgsmask.rows; i++)
+						for(int j=0; j<_bgsmask.cols; j++){
+							if(diff[k].at<double>(i,j) <= _sigma_coef * sqrt(_variance_mm[k].at<double>(i,j))){
+								M[k].at<uchar>(i,j) = 1;
+								_mean_mm[k].at<double>(i,j) = _alpha * Frame.at<double>(i,j) + (1 - _alpha) * _mean_mm[k].at<double>(i,j);
+								_variance_mm[k].at<double>(i,j) = _alpha * pow(Frame.at<double>(i,j) - _mean_mm[k].at<double>(i,j), 2)+ (1 - _alpha) * _variance_mm[k].at<double>(i,j);
+							}
+							omega_mm_tmp[k].at<double>(i,j) = (1 - _alpha) * _omega_mm[k].at<double>(i,j) + _alpha * M[k].at<uchar>(i,j);
+						}
+
+				for(int i=0; i<_bgsmask.rows; i++)
+					for(int j=0; j<_bgsmask.cols; j++){
+						double sum = 0;
+						for(int k=0; k<_K; k++){
+							sum += omega_mm_tmp[k].at<double>(i, j);
+						}
+						for(int k=0; k<_K; k++){
+							omega_mm_tmp[k].at<double>(i, j) /= sum;
+						}
+					}
+
+				for(int i=0; i<_bgsmask.rows; i++)
+					for(int j=0; j<_bgsmask.cols; j++){
+						int min_arg = -1;
+						double min_value = 1;
+						for(int k=0; k<_K; k++){
+
+							if(M[k].at<double>(i, j) && omega_mm_tmp[k].at<double>(i, j) >= (1 - W_th)){
+								_bgsmask.at<uchar>(i, j) = 0;
+								break;
+							}
+							else{
+								_bgsmask.at<uchar>(i, j) = 255;
+							}
+
+							if(omega_mm_tmp[k].at<double>(i, j) < min_value){
+								min_value = omega_mm_tmp[k].at<double>(i, j);
+								min_arg = k;
+							}
+
+							if(_bgsmask.at<uchar>(i, j) == 255){
+								omega_mm_tmp[min_arg].at<double>(i, j) = 0.05;
+								_mean_mm[min_arg].at<double>(i,j) = Frame.at<double>(i,j);
+								_variance_mm[min_arg].at<double>(i,j) = _initial_variance;
+							}
+						}
+					}
+
+				for(int k=0; k<_K; k++){
+					_omega_mm[k] = omega_mm_tmp[k];
+				}
+
+				}
+
+			}
 
 		}
 

@@ -128,12 +128,13 @@ int main(int argc, char ** argv)
 			double saturation_th = 80;
 			double hue_th = 70;
 
-			double sigma_coef = 6.;
-			bool unimodal = true;
+			double sigma_coef = 6.; // we can play with this value
+			bool unimodal = false;
 			int K = 3; // 3, 4 or 5
+			double initial_variance = 0.1;
 
 			fgseg::bgs avsa_bgs(tau, alpha, selective_bkg_update, threshold_ghosts2, rgb, alpha_sh,
-					beta_sh, saturation_th, hue_th, sigma_coef, unimodal, K);
+					beta_sh, saturation_th, hue_th, sigma_coef, unimodal, K, initial_variance);
 			//construct object of the bgs class
 			//Lab1.1.2 fgseg::bgs avsa_bgs(tau, alpha, selective_bkg_update, rgb); //construct object of the bgs class
 			//Lab1.1.3 fgseg::bgs avsa_bgs(tau, alpha, selective_bkg_update, threshold_ghosts2, rgb); //construct object of the bgs class
