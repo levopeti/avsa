@@ -50,7 +50,8 @@ int main(int argc, char ** argv)
 		//Paths for the dataset
 //		// In this example we assume that the dataset is available at
 //		// "/home/avsa/datasets/...
-		string dataset_path = "/home/avsa/AVSA2020datasets/"; //SET THIS DIRECTORY according to your download
+		//string dataset_path = "/home/avsa/AVSA2020datasets/"; //SET THIS DIRECTORY according to your download
+		string dataset_path = "../../../../../Lab_2/2020AVSALab3_datasets";
 		string dataset_cat[1] = {""};
 		//string baseline_seq[10] = {"AVSS2007/AVSSS07_EASY.mkv","AVSS2007/AVSSS07_HARD.mkv", "ETRI/ETRI_od_a.avi", "PETS2006/PETS2006_S1/PETS2006_S1_C3.mpeg","PETS2006/PETS2006_S4/PETS2006_S4_C3.avi","PETS2006/PETS2006_S5/PETS2006_S5_C3.mpeg","VISOR/visor_Video00.avi","VISOR/visor_Video01.avi","VISOR/visor_Video02.avi","VISOR/visor_Video03.avi"};
 		string baseline_seq[8] = {"ETRI/ETRI_od_A.avi","PETS2006/PETS2006_S1/PETS2006_S1_C3.mpeg","PETS2006/PETS2006_S4/PETS2006_S4_C3.avi","PETS2006/PETS2006_S5/PETS2006_S5_C3.mpeg","VISOR/visor_Video00.avi","VISOR/visor_Video01.avi","VISOR/visor_Video02.avi","VISOR/visor_Video03.avi"};
@@ -72,8 +73,9 @@ int main(int argc, char ** argv)
 		//Paths for the results
 		// In this example we assume that the results are stored in the project directory
 		// "/home/avsa/eclipse-workspace/Lab1.1AVSA2020/
-		string project_root_path = "/home/avsa/AVSA2020results/"; //SET THIS DIRECTORY according to your project
-		string project_name = "Lab2.2AVSA2020"; //SET THIS DIRECTORY according to your project
+		//string project_root_path = "/home/avsa/AVSA2020results/"; //SET THIS DIRECTORY according to your project
+		string project_root_path = "../../../../Lab_2/AVSA2020results";
+		string project_name = "Lab2.0AVSA2020"; //SET THIS DIRECTORY according to your project
 		string results_path = project_root_path+"/"+project_name+"/results";
 
 		// create directory to store results
@@ -100,7 +102,8 @@ int main(int argc, char ** argv)
 			VideoCapture cap;//reader to grab videoframes
 
 			//Compose full path of images
-			string inputvideo = dataset_path + "/" + dataset_cat[c] + "/" + baseline_seq[s] + image_path;
+			//string inputvideo = dataset_path + "/" + dataset_cat[c] + "/" + baseline_seq[s] + image_path;
+			string inputvideo = dataset_path + "/" + baseline_seq[s] + image_path;
 			cout << "Accessing sequence at " << inputvideo << endl;
 
 			//open the video file to check if it exists

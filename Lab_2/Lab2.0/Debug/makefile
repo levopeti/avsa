@@ -44,7 +44,7 @@ all: Lab2.0
 Lab2.0: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++  -o "Lab2.0" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L/opt/installation/OpenCV-3.4.4/lib -o "Lab2.0" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
