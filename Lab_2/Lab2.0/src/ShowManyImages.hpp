@@ -1,4 +1,3 @@
-
 /* Applied Video Sequence Analysis (AVSA)
  *
  *	LAB1: Background Subtraction - Unix version

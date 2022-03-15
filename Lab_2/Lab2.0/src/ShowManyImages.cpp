@@ -67,11 +67,11 @@ int max;
 // If the number of arguments is lesser than 0 or greater than 12
 // return without displaying
 if(nArgs <= 0) {
-    printf("Number of arguments too small....\n");
+    printf("ShowManyImages(): Number of arguments too small....\n");
     return;
 }
 else if(nArgs > 14) {
-    printf("Number of arguments too large, can only handle maximally 12 images at a time ...\n");
+    printf("ShowManyImages(): Number of arguments too large, can only handle maximally 12 images at a time ...\n");
     return;
 }
 // Determine the size of the image,
@@ -117,7 +117,7 @@ for (i = 0, m = 20, n = 20; i < nArgs; i++, m += (20 + size)) {
     // Check whether it is NULL or not
     // If it is NULL, release the image, and return
     if(ori.empty()) {
-        printf("Invalid arguments");
+        printf("ShowManyImages(): Invalid arguments");
         return;
     }
 
