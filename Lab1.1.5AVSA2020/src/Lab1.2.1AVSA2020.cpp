@@ -68,7 +68,7 @@ int main(int argc, char ** argv)
 //	string project_root_path = "/home/eduardo/Documents/Master_content/AVSA/Lab2/results";
 
 	//SET THIS DIRECTORY according to your project
-	string project_name = "Lab1.1.3_CDNet2012"; // project exe name
+	string project_name = "Lab1.2.1_CDNet2012"; // project exe name
 	string results_path = project_root_path+"/"+project_name+"/results";
 
 	// create directory to store results
@@ -121,17 +121,17 @@ int main(int argc, char ** argv)
 			double alpha = 0.05; // to set ... //Lab1.1.2-3
 			bool selective_bkg_update = true; // true ... //Lab1.1.2-3
 			int threshold_ghosts2 = 25; // to set ... //Lab1.1.3
-			bool rgb = false; //true false;
+			bool rgb = true; //true false;
 
-			double alpha_sh = 0.5;
-			double beta_sh = 0.9;
-			double saturation_th = 80;
-			double hue_th = 70;
+			double alpha_sh = 0.4;
+			double beta_sh = 1.1;
+			double saturation_th = 85;
+			double hue_th = 65;
 
-			double sigma_coef = 8.; // we can play with this value
-			bool unimodal = true;
+			double sigma_coef = 10.; // we can play with this value
+			bool unimodal = false;
 			int K = 3; // 3, 4 or 5
-			double initial_variance = 10.1;
+			double initial_variance = 20.1;
 			double W_th = 0.9;
 
 			fgseg::bgs avsa_bgs(tau, alpha, selective_bkg_update, threshold_ghosts2, rgb, alpha_sh,
@@ -166,8 +166,8 @@ int main(int argc, char ** argv)
            		t = (double)getTickCount();
 
            		//Apply your bgs algorithm
-		        avsa_bgs.updateGaussian(img, it);
-           		//avsa_bgs.bkgSubtraction(img);
+		        //avsa_bgs.updateGaussian(img, it);
+           		avsa_bgs.bkgSubtraction(img);
 		        avsa_bgs.removeShadows();
 
 				//...
