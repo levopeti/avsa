@@ -2,7 +2,7 @@
  *
  *	LAB2: Blob detection & classification
  *	Lab2.0: Sample Opencv project
- * 
+ *
  *
  * Authors: José M. Martínez (josem.martinez@uam.es), Paula Moral (paula.moral@uam.es), Juan C. San Miguel (juancarlos.sanmiguel@uam.es)
  */
@@ -30,7 +30,7 @@ using namespace std;
 #define MIN_HEIGHT 20
 
 //main function
-int main(int argc, char ** argv) 
+int main(int argc, char ** argv)
 {
 	Mat frame; // current Frame
 	Mat fgmask; // foreground mask
@@ -168,10 +168,10 @@ int main(int argc, char ** argv)
 				extractStationaryFG(fgmask, fgmask_history, sfgmask);
 				extractBlobs(sfgmask, sbloblist, connectivity);
 				//		cout << "Num STATIONARY blobs extracted=" << sbloblist.size() << endl;
-				
+
 				int min_width=0;  // to set properly
 				int min_height=0; // to set properly
-			
+
 				removeSmallBlobs(sbloblist, sbloblistFiltered, MIN_WIDTH, MIN_HEIGHT);
 				//		cout << "Num STATIONARY small blobs removed=" << sbloblist.size()-sbloblistFiltered.size() << endl;
 
@@ -179,7 +179,7 @@ int main(int argc, char ** argv)
 				// Clasify the blobs in fgmask
 				classifyBlobs(sbloblistFiltered);
 
-		
+
 				//Time measurement
 				t = (double)getTickCount() - t;
 //		        if (_CONSOLE_DEBUG) cout << "proc. time = " << 1000*t/t_freq << " milliseconds."<< endl;
@@ -210,6 +210,7 @@ int main(int argc, char ** argv)
 }
 return 0;
 }
+
 
 
 
