@@ -8,6 +8,7 @@
  */
 
 #include "blobs.hpp"
+#include <algorithm>
 
 /**
  *	Draws blobs with different rectangles on the image 'frame'. All the input arguments must be
@@ -35,6 +36,7 @@
 	for(int i = 0; i < bloblist.size(); i++)
 	{
 		cvBlob blob = bloblist[i]; //get ith blob
+		std::cout << blob.label << std::endl;
 		//...
 		Scalar color;
 		std::string label="";
@@ -91,9 +93,13 @@ int extractBlobs(cv::Mat fgmask, std::vector<cvBlob> &bloblist, int connectivity
 {
 	//check input conditions and return -1 if any is not satisfied
 	//...
+	if (connectivity != 4 && connectivity != 8)
+	{
+		return -1;
+	}
 
 	//required variables for connected component analysis
-	//...
+	cv::Rect area;
 	Mat aux; // image to be updated each time a blob is detected (blob cleared)
 	fgmask.convertTo(aux,CV_32SC1);
 
@@ -101,11 +107,20 @@ int extractBlobs(cv::Mat fgmask, std::vector<cvBlob> &bloblist, int connectivity
 	bloblist.clear();
 
 	//Connected component analysis
+	for(int i=0; i<fgmask.rows; i++)
+		for(int j=0; j<fgmask.cols; j++)
+		{
+			if (aux.at<int>(i, j) == 255){
+				cv::floodFill(aux, cv::Point(j, i), 0, &area, cv::Scalar(), cv::Scalar(), connectivity);
+				cvBlob blob = initBlob(1, area.x, area.y, area.width, area.height);
+				bloblist.push_back(blob);
+			}
 
+		}
 
 	// void creation of a unqie blob in the center
-		cvBlob blob=initBlob(1, fgmask.cols/2, fgmask.rows/2, fgmask.cols/4, fgmask.rows/4);
-		bloblist.push_back(blob);
+//		cvBlob blob=initBlob(1, fgmask.cols/2, fgmask.rows/2, fgmask.cols/4, fgmask.rows/4);
+//		bloblist.push_back(blob);
 
 //	std::cout << bkg << " " << fg << " " << sh <<" " << fill << " " << unknown << " "<< bkg+fg+sh+unknown  << " " << fgmask.rows*fgmask.cols << std::endl;
 //	std::cout << blob_id << " " << small_blobs << std::endl;
@@ -132,9 +147,9 @@ int removeSmallBlobs(std::vector<cvBlob> bloblist_in, std::vector<cvBlob> &blobl
 	for(int i = 0; i < bloblist_in.size(); i++)
 	{
 		cvBlob blob_in = bloblist_in[i]; //get ith blob
-
-		// ...
-		bloblist_out.push_back(blob_in); // void implementation (does not remove)
+		if (blob_in.w > min_width && blob_in.h > min_height){
+			bloblist_out.push_back(blob_in); // void implementation (does not remove)
+		}
 
 	}
 	//destroy all resources
@@ -186,15 +201,58 @@ float WED(float val1, float val2, float std)
  	//...
 
  	//required variables for classification
- 	//...
+	 float aspect_ratio;
+	 float min_dist = FLT_MAX;
+
 
  	//classify each blob of the list
  	for(int i = 0; i < bloblist.size(); i++)
  	{
  		cvBlob blob = bloblist[i]; //get i-th blob
- 		//...
+ 		aspect_ratio = (float) blob.w / (float) blob.h;
 
- 		// void implementation (does not change label -at creation UNKNOWN-)
+ 		// ED
+ 		float dist_person = ED(aspect_ratio, MEAN_PERSON);
+ 		float dist_car = ED(aspect_ratio, MEAN_CAR);
+ 		float dist_object = ED(aspect_ratio, MEAN_OBJECT);
+
+ 		// WED
+// 		float dist_person = WED(aspect_ratio, MEAN_PERSON, STD_PERSON);
+// 		float dist_car = WED(aspect_ratio, MEAN_CAR, STD_CAR);
+// 		float dist_object = WED(aspect_ratio, MEAN_OBJECT, STD_OBJECT);
+
+
+ 		// check person
+ 		if(dist_person < STD_PERSON ){
+ 			blob.label = PERSON;
+ 			min_dist = dist_person;
+ 		}
+
+ 		// check car
+ 		if(dist_car < STD_CAR && blob.label == UNKNOWN){
+ 			blob.label = CAR;
+ 			min_dist = dist_car;
+ 		}
+
+ 		if(dist_car < std::min(min_dist, (float) STD_CAR) && blob.label != UNKNOWN){
+ 			blob.label = CAR;
+ 			min_dist = dist_car;
+ 		}
+
+ 		// check object
+ 		if(dist_object < STD_OBJECT && blob.label == UNKNOWN){
+ 		 	blob.label = OBJECT;
+ 		 	min_dist = dist_object;
+ 		}
+
+ 		if(dist_object < std::min(min_dist, (float) STD_OBJECT) && blob.label != UNKNOWN){
+ 		 	blob.label = OBJECT;
+ 		}
+
+ 		bloblist[i] = blob;
+//		std::cout << blob.label << std::endl;
+// 		std::cout << aspect_ratio << " " << blob.h << " " << blob.w << std::endl;
+// 		std::cout << std::endl;
  	}
 
  	//destroy all resources
