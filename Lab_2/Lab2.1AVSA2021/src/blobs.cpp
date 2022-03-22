@@ -233,9 +233,9 @@ float WED(float val1, float val2, float std)
   */
 
 #define FPS 25 //check in video - not really critical
-#define SECS_STATIONARY 0 // to set
-#define I_COST 0 // to set // increment cost for stationarity detection
-#define D_COST 0 // to set // decrement cost for stationarity detection
+#define SECS_STATIONARY 2 // to set
+#define I_COST 1 // to set // increment cost for stationarity detection
+#define D_COST 15 // to set // decrement cost for stationarity detection
 #define STAT_TH 0.0 // to set
 
  int extractStationaryFG (Mat fgmask, Mat &fgmask_history, Mat &sfgmask)
@@ -248,7 +248,7 @@ float WED(float val1, float val2, float std)
 	 for (int i=0; i<fgmask.rows;i++)
 		 for(int j=0; j<fgmask.cols;j++)
 		 {
-			// ...
+
 			 fgmask_history.at<float>(i,j) = 0; // void implementation (no history)
 		 }//for
 

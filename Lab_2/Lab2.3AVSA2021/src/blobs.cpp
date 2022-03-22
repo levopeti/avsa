@@ -220,32 +220,35 @@ float WED(float val1, float val2, float std)
   */
 
 #define FPS 25 //check in video - not really critical
-#define SECS_STATIONARY 0 // to set
-#define I_COST 0 // to set // increment cost for stationarity detection
-#define D_COST 0 // to set // decrement cost for stationarity detection
-#define STAT_TH 0.0 // to set
+#define SECS_STATIONARY 0.5 // to set
+#define I_COST 1 // to set // increment cost for stationarity detection
+#define D_COST 15 // to set // decrement cost for stationarity detection
+#define STAT_TH 0.05 // to set
 
  int extractStationaryFG (Mat fgmask, Mat &fgmask_history, Mat &sfgmask)
  {
 
+	 cv::Mat fg_temp = Mat::zeros(Size(fgmask.cols, fgmask.rows), CV_32F);
+
 	 int numframes4static=(int)(FPS*SECS_STATIONARY);
 
+	 // Get temporary foreground mask with 1=foreground, 0=background+shadow
+	 threshold(fgmask, fg_temp, 200, 1, cv::THRESH_BINARY);
+	 fg_temp.convertTo(fg_temp, CV_32F);
+//	 std::cout<<int(fgmask.at<uchar>(20,20))<<std::endl;
+//	 std::cout<<fg_temp.at<float>(20,20)<<std::endl<<std::endl;
 
-	 // update fgmask_counter
-	 for (int i=0; i<fgmask.rows;i++)
-		 for(int j=0; j<fgmask.cols;j++)
-		 {
-			// ...
-			 fgmask_history.at<float>(i,j) = 0; // void implementation (no history)
-		 }//for
+	 // UPDATE COUNTER => Ecuations (2) and (3) together
+	 fgmask_history = I_COST * fg_temp - (1-fg_temp) * D_COST;
+	 fgmask_history = cv::max(fgmask_history, 0);
 
-	// update sfgmask
-	for (int i=0; i<fgmask.rows;i++)
-		 for(int j=0; j<fgmask.cols;j++)
-			 {
-			 	 // ...
-				 sfgmask.at<uchar>(i,j)=0;// void implementation (no stationary fg)
-			 }
+	 // Normalize whithin [0,1] range
+	 cv::Mat fgmask_history_norm = cv::min(1, fgmask_history/numframes4static);
+
+	 // UPDATE sfgmask
+	 sfgmask = (fgmask_history_norm >= STAT_TH);
+
+
  return 1;
  }
 
