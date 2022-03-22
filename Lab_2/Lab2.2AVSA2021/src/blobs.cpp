@@ -250,9 +250,6 @@ float WED(float val1, float val2, float std)
  		}
 
  		bloblist[i] = blob;
-//		std::cout << blob.label << std::endl;
-// 		std::cout << aspect_ratio << " " << blob.h << " " << blob.w << std::endl;
-// 		std::cout << std::endl;
  	}
 
  	//destroy all resources
