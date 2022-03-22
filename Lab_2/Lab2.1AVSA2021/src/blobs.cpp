@@ -108,9 +108,9 @@ int extractBlobs(cv::Mat fgmask, std::vector<cvBlob> &bloblist, int connectivity
 	for(int i=0; i<fgmask.rows; i++)
 		for(int j=0; j<fgmask.cols; j++)
 		{
-			if (aux.at<int>(i,j) == 255){
-				cv::floodFill(aux, cv::Point(j,i), 0, &area, cv::Scalar(), cv::Scalar(), connectivity);
-				cvBlob blob=initBlob(1, area.x, area.y, area.width, area.height);
+			if (aux.at<int>(i, j) == 255){
+				cv::floodFill(aux, cv::Point(j, i), 0, &area, cv::Scalar(), cv::Scalar(), connectivity);
+				cvBlob blob = initBlob(1, area.x, area.y, area.width, area.height);
 				bloblist.push_back(blob);
 			}
 
