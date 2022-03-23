@@ -217,9 +217,7 @@ float WED(float val1, float val2, float std)
  			}
  		}
  		bloblist[i] = blob;
-
  	}
-
  	return 1;
  }
 
