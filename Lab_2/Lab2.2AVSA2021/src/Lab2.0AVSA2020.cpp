@@ -54,7 +54,8 @@ int main(int argc, char ** argv)
 		string dataset_path = "../../../Lab_2/2020AVSALab3_datasets";
 		string dataset_cat[1] = {""};
 		//string baseline_seq[10] = {"AVSS2007/AVSSS07_EASY.mkv","AVSS2007/AVSSS07_HARD.mkv", "ETRI/ETRI_od_a.avi", "PETS2006/PETS2006_S1/PETS2006_S1_C3.mpeg","PETS2006/PETS2006_S4/PETS2006_S4_C3.avi","PETS2006/PETS2006_S5/PETS2006_S5_C3.mpeg","VISOR/visor_Video00.avi","VISOR/visor_Video01.avi","VISOR/visor_Video02.avi","VISOR/visor_Video03.avi"};
-		string baseline_seq[8] = {"ETRI/ETRI_od_A.avi","PETS2006/PETS2006_S1/PETS2006_S1_C3.mpeg","PETS2006/PETS2006_S4/PETS2006_S4_C3.avi","PETS2006/PETS2006_S5/PETS2006_S5_C3.mpeg","VISOR/visor_Video00.avi","VISOR/visor_Video01.avi","VISOR/visor_Video02.avi","VISOR/visor_Video03.avi"};
+//		string baseline_seq[8] = {"ETRI/ETRI_od_A.avi","PETS2006/PETS2006_S1/PETS2006_S1_C3.mpeg","PETS2006/PETS2006_S4/PETS2006_S4_C3.avi","PETS2006/PETS2006_S5/PETS2006_S5_C3.mpeg","VISOR/visor_Video00.avi","VISOR/visor_Video01.avi","VISOR/visor_Video02.avi","VISOR/visor_Video03.avi"};
+		string baseline_seq[1] = {"PETS2006/PETS2006_S1/PETS2006_S1_C3.mpeg"};
 		string image_path = ""; //path to images - this format allows to read consecutive images with filename inXXXXXX.jpq (six digits) starting with 000001
 
 //		// "/home/avsa/datasets/dataset2012lite/dataset/baseline/...
@@ -90,7 +91,7 @@ int main(int argc, char ** argv)
 		//Loop for all categories
 		for (int c=0; c<NumCat; c++ )
 		{
-					// create directory to store results for category
+			// create directory to store results for category
 			string makedir_cmd = "mkdir "+results_path + "/" + dataset_cat[c];
 			system(makedir_cmd.c_str());
 
@@ -142,7 +143,7 @@ int main(int argc, char ** argv)
 				//apply algs
 				img.copyTo(frame);
 				// Compute fgmask
-				double learningrate=-1; //default value (as starting point)
+				double learningrate=0.001; //default value (as starting point)
 				// The value between 0 and 1 that indicates how fast the background model is
 				// learnt. Negative parameter (default -1) value makes the algorithm to use some automatically chosen learning
 				// rate. 0 means that the background model is not updated at all, 1 means that the background model
@@ -172,8 +173,6 @@ int main(int argc, char ** argv)
 				extractBlobs(sfgmask, sbloblist, connectivity);
 				//		cout << "Num STATIONARY blobs extracted=" << sbloblist.size() << endl;
 				
-				int min_width=0;  // to set properly
-				int min_height=0; // to set properly
 			
 				removeSmallBlobs(sbloblist, sbloblistFiltered, MIN_WIDTH, MIN_HEIGHT);
 				//		cout << "Num STATIONARY small blobs removed=" << sbloblist.size()-sbloblistFiltered.size() << endl;
@@ -195,6 +194,21 @@ int main(int argc, char ** argv)
 
 				ShowManyImages(title, 6, frame, fgmask, sfgmask,
 						paintBlobImage(frame,bloblistFiltered, false), paintBlobImage(frame,bloblistFiltered, true), paintBlobImage(frame,sbloblistFiltered, true));
+
+				namedWindow("1"); //current frame
+				imshow("1", frame);
+				namedWindow("2"); //current frame
+				imshow("2", paintBlobImage(frame,bloblistFiltered, true));
+				namedWindow("3"); //current frame
+				imshow("3", fgmask);
+
+				if (it%30==0){
+					stringstream it_s;
+					it_s << setw(3) << setfill('0') << it;
+//					imwrite(("/home/eduardo/Desktop/images/e2" + it_s.str() + ".png"),frame);
+					imwrite(("/home/eduardo/Desktop/images/se2fg" + it_s.str() + ".png"),fgmask);
+					imwrite(("/home/eduardo/Desktop/images/se2blob" + it_s.str() + ".png"),paintBlobImage(frame,bloblistFiltered, true));
+				}
 
 				//exit if ESC key is pressed
 				if(waitKey(30) == 27) break;

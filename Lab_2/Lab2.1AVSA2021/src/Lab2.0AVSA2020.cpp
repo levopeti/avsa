@@ -54,7 +54,8 @@ int main(int argc, char ** argv)
 		string dataset_path = "../../../Lab_2/2020AVSALab3_datasets";
 		string dataset_cat[1] = {""};
 		//string baseline_seq[10] = {"AVSS2007/AVSSS07_EASY.mkv","AVSS2007/AVSSS07_HARD.mkv", "ETRI/ETRI_od_a.avi", "PETS2006/PETS2006_S1/PETS2006_S1_C3.mpeg","PETS2006/PETS2006_S4/PETS2006_S4_C3.avi","PETS2006/PETS2006_S5/PETS2006_S5_C3.mpeg","VISOR/visor_Video00.avi","VISOR/visor_Video01.avi","VISOR/visor_Video02.avi","VISOR/visor_Video03.avi"};
-		string baseline_seq[8] = {"ETRI/ETRI_od_A.avi","PETS2006/PETS2006_S1/PETS2006_S1_C3.mpeg","PETS2006/PETS2006_S4/PETS2006_S4_C3.avi","PETS2006/PETS2006_S5/PETS2006_S5_C3.mpeg","VISOR/visor_Video00.avi","VISOR/visor_Video01.avi","VISOR/visor_Video02.avi","VISOR/visor_Video03.avi"};
+//		string baseline_seq[8] = {"ETRI/ETRI_od_A.avi","PETS2006/PETS2006_S1/PETS2006_S1_C3.mpeg","PETS2006/PETS2006_S4/PETS2006_S4_C3.avi","PETS2006/PETS2006_S5/PETS2006_S5_C3.mpeg","VISOR/visor_Video00.avi","VISOR/visor_Video01.avi","VISOR/visor_Video02.avi","VISOR/visor_Video03.avi"};
+		string baseline_seq[1] = {"PETS2006/PETS2006_S1/PETS2006_S1_C3.mpeg"};
 		string image_path = ""; //path to images - this format allows to read consecutive images with filename inXXXXXX.jpq (six digits) starting with 000001
 
 //		// "/home/avsa/datasets/dataset2012lite/dataset/baseline/...
@@ -195,6 +196,22 @@ int main(int argc, char ** argv)
 
 				ShowManyImages(title, 6, frame, fgmask, sfgmask,
 						paintBlobImage(frame,bloblistFiltered, false), paintBlobImage(frame,bloblistFiltered, true), paintBlobImage(frame,sbloblistFiltered, true));
+
+				namedWindow("1"); //current frame
+				imshow("1", frame);
+				namedWindow("2"); //current frame
+				imshow("2", paintBlobImage(frame,bloblistFiltered, false));
+				namedWindow("3"); //current frame
+				imshow("3", fgmask);
+
+				if (it%100==0){
+					stringstream it_s;
+					it_s << setw(3) << setfill('0') << it;
+					imwrite(("/home/eduardo/Desktop/images/sec" + it_s.str() + ".png"),frame);
+					imwrite(("/home/eduardo/Desktop/images/secfg" + it_s.str() + ".png"),fgmask);
+					imwrite(("/home/eduardo/Desktop/images/secblobmin" + it_s.str() + ".png"),paintBlobImage(frame,bloblistFiltered, false));
+				}
+
 
 				//exit if ESC key is pressed
 				if(waitKey(30) == 27) break;

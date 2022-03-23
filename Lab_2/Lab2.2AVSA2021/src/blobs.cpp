@@ -25,18 +25,13 @@
  Mat paintBlobImage(cv::Mat frame, std::vector<cvBlob> bloblist, bool labelled)
 {
 	cv::Mat blobImage;
-	//check input conditions and return original if any is not satisfied
-	//...
 	frame.copyTo(blobImage);
 
-	//required variables to paint
-	//...
 
 	//paint each blob of the list
-	for(int i = 0; i < bloblist.size(); i++)
+	for(size_t i = 0; i < bloblist.size(); i++)
 	{
 		cvBlob blob = bloblist[i]; //get ith blob
-		std::cout << blob.label << std::endl;
 		//...
 		Scalar color;
 		std::string label="";
@@ -71,9 +66,6 @@
 				rectangle(blobImage, p1, p2, Scalar(255, 255, 255), 1, 8, 0);
 	}
 
-	//destroy all resources (if required)
-	//...
-
 	//return the image to show
 	return blobImage;
 }
@@ -92,68 +84,49 @@
 int extractBlobs(cv::Mat fgmask, std::vector<cvBlob> &bloblist, int connectivity)
 {
 	//check input conditions and return -1 if any is not satisfied
-	//...
 	if (connectivity != 4 && connectivity != 8)
 	{
 		return -1;
 	}
 
 	//required variables for connected component analysis
-	cv::Rect area;
 	Mat aux; // image to be updated each time a blob is detected (blob cleared)
+	cv::Rect area;
 	fgmask.convertTo(aux,CV_32SC1);
 
-	//clear blob list (to fill with this function)
+	//clear blob list
 	bloblist.clear();
 
 	//Connected component analysis
 	for(int i=0; i<fgmask.rows; i++)
 		for(int j=0; j<fgmask.cols; j++)
 		{
-			if (aux.at<int>(i, j) == 255){
-				cv::floodFill(aux, cv::Point(j, i), 0, &area, cv::Scalar(), cv::Scalar(), connectivity);
-				cvBlob blob = initBlob(1, area.x, area.y, area.width, area.height);
-				bloblist.push_back(blob);
+			if (aux.at<int>(i, j) == 255){ // if foreground
+				cv::floodFill(aux, cv::Point(j, i), 0, &area, cv::Scalar(), cv::Scalar(), connectivity); // algorithm
+				cvBlob blob = initBlob(1, area.x, area.y, area.width, area.height); // create blob
+				bloblist.push_back(blob); // store blob in list
 			}
 
 		}
 
-	// void creation of a unqie blob in the center
-//		cvBlob blob=initBlob(1, fgmask.cols/2, fgmask.rows/2, fgmask.cols/4, fgmask.rows/4);
-//		bloblist.push_back(blob);
-
-//	std::cout << bkg << " " << fg << " " << sh <<" " << fill << " " << unknown << " "<< bkg+fg+sh+unknown  << " " << fgmask.rows*fgmask.cols << std::endl;
-//	std::cout << blob_id << " " << small_blobs << std::endl;
-
-	//destroy all resources
-	//...
-
-	//return OK code
 	return 1;
 }
 
 
 int removeSmallBlobs(std::vector<cvBlob> bloblist_in, std::vector<cvBlob> &bloblist_out, int min_width, int min_height)
 {
-	//check input conditions and return -1 if any is not satisfied
-
-	//required variables
-	//...
 
 	//clear blob list (to fill with this function)
 	bloblist_out.clear();
 
-
-	for(int i = 0; i < bloblist_in.size(); i++)
+	// remove the blobs whose size is below some constraints
+	for(size_t i = 0; i < bloblist_in.size(); i++)
 	{
 		cvBlob blob_in = bloblist_in[i]; //get ith blob
 		if (blob_in.w > min_width && blob_in.h > min_height){
-			bloblist_out.push_back(blob_in); // void implementation (does not remove)
+			bloblist_out.push_back(blob_in);
 		}
-
 	}
-	//destroy all resources
-	//...
 
 	//return OK code
 	return 1;
@@ -197,19 +170,19 @@ float WED(float val1, float val2, float std)
 //end distances
  int classifyBlobs(std::vector<cvBlob> &bloblist)
  {
- 	//check input conditions and return -1 if any is not satisfied
- 	//...
 
  	//required variables for classification
 	 float aspect_ratio;
-	 float min_dist = FLT_MAX;
+	 double min_distance;
+	 int argMin;
 
 
  	//classify each blob of the list
- 	for(int i = 0; i < bloblist.size(); i++)
+ 	for(size_t i = 0; i < bloblist.size(); i++)
  	{
+ 		argMin = 0;
  		cvBlob blob = bloblist[i]; //get i-th blob
- 		aspect_ratio = (float) blob.w / (float) blob.h;
+ 		aspect_ratio = (float) blob.w / (float) blob.h; // compute blob's aspect ratio
 
  		// ED
  		float dist_person = ED(aspect_ratio, MEAN_PERSON);
@@ -221,44 +194,32 @@ float WED(float val1, float val2, float std)
 // 		float dist_car = WED(aspect_ratio, MEAN_CAR, STD_CAR);
 // 		float dist_object = WED(aspect_ratio, MEAN_OBJECT, STD_OBJECT);
 
+ 		std::vector<float> v  = {dist_person, dist_car, dist_object}; // Distances vector
+ 		std::vector<bool>  vb = {dist_person<STD_PERSON, dist_car<STD_CAR, dist_object<STD_OBJECT}; // Vector "BELONG OR NOT" to Gaussian
+ 		min_distance = *std::max_element(v.begin(), v.end());
 
- 		// check person
- 		if(dist_person < STD_PERSON ){
- 			blob.label = PERSON;
- 			min_dist = dist_person;
+ 		// For those who belong to the gaussian, check who has the minumum deviation
+ 		for (int n=0; n<3; n++)
+ 			if(vb[n] && v[n]<=min_distance) {min_distance = v[n]; argMin = n+1;}
+
+ 		// Label
+ 		if (argMin){
+ 			switch(argMin){
+ 					case 1:
+ 						blob.label = PERSON;
+ 						break;
+ 					case 2:
+ 						blob.label = CAR;
+						break;
+ 					case 3:
+ 						blob.label = OBJECT;
+						break;
+ 			}
  		}
-
- 		// check car
- 		if(dist_car < STD_CAR && blob.label == UNKNOWN){
- 			blob.label = CAR;
- 			min_dist = dist_car;
- 		}
-
- 		if(dist_car < std::min(min_dist, (float) STD_CAR) && blob.label != UNKNOWN){
- 			blob.label = CAR;
- 			min_dist = dist_car;
- 		}
-
- 		// check object
- 		if(dist_object < STD_OBJECT && blob.label == UNKNOWN){
- 		 	blob.label = OBJECT;
- 		 	min_dist = dist_object;
- 		}
-
- 		if(dist_object < std::min(min_dist, (float) STD_OBJECT) && blob.label != UNKNOWN){
- 		 	blob.label = OBJECT;
- 		}
-
  		bloblist[i] = blob;
-//		std::cout << blob.label << std::endl;
-// 		std::cout << aspect_ratio << " " << blob.h << " " << blob.w << std::endl;
-// 		std::cout << std::endl;
+
  	}
 
- 	//destroy all resources
- 	//...
-
- 	//return OK code
  	return 1;
  }
 
@@ -286,7 +247,7 @@ float WED(float val1, float val2, float std)
  int extractStationaryFG (Mat fgmask, Mat &fgmask_history, Mat &sfgmask)
  {
 
-	 int numframes4static=(int)(FPS*SECS_STATIONARY);
+//	 int numframes4static=(int)(FPS*SECS_STATIONARY);
 
 
 	 // update fgmask_counter
