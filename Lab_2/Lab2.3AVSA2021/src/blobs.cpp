@@ -259,6 +259,7 @@ float WED(float val1, float val2, float std)
 	 fgmask_history = fgmask_history + (I_COST * fg_temp) - ((1-fg_temp) * D_COST);
 	 fgmask_history = cv::max(fgmask_history, 0);
 
+
 	 // Normalize whithin [0,1] range
 	 cv::Mat fgmask_history_norm = cv::min(1, fgmask_history/numframes4static);
 

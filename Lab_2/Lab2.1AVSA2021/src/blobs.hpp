@@ -60,11 +60,5 @@ Mat paintBlobImage(Mat frame, std::vector<cvBlob> bloblist, bool labelled);
 int extractBlobs(Mat fgmask, std::vector<cvBlob> &bloblist, int connectivity);
 int removeSmallBlobs(std::vector<cvBlob> bloblist_in, std::vector<cvBlob> &bloblist_out, int min_width, int min_height);
 
-//blob classification functions
-int classifyBlobs(std::vector<cvBlob> &bloblist);
-
-//stationary blob extraction functions
-int extractStationaryFG (Mat fgmask, Mat &fgmask_history, Mat &sfgmask);
-
 
 #endif
