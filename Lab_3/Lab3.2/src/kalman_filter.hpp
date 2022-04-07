@@ -15,24 +15,4 @@ void do_kalman(cv::Point meas, int stateSize, cv::KalmanFilter &kf, bool &first_
 void draw_trajectory(std::vector<cv::Point> v, cv::String legend, cv::Mat &frame, CvScalar color, cv::Point origin_point);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #endif
