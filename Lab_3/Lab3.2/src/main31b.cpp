@@ -10,6 +10,7 @@
 //includes
 #include <opencv2/opencv.hpp> 	//opencv libraries
 #include "kalman_filter.hpp"
+#include "ShowManyImages.hpp"
 
 
 
@@ -23,6 +24,8 @@ int main(int argc, char ** argv)
 {
 	int count=0;		 											// frame counter
 	Mat frame;														// frame of the video sequence
+	Mat frame_estimations;
+	Mat frame_measurements;													
 	std::string inputvideo = "../../../Lab_3/dataset_lab3/lab3.1/singleball.mp4"; 	// path for the video to process
 
 
@@ -93,9 +96,13 @@ int main(int argc, char ** argv)
 		std::ostringstream str;
 		str << std::setfill('0') << std::setw(3) << count;
 		putText(frame,"Frame " + str.str(), cvPoint(30,30),FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(255,255,255), 1, CV_AA);
-		drawMarker(frame, meas, cvScalar(255,0,0), MARKER_CROSS, 20,2); //display measurement
-		drawMarker(frame, v_estimations[i], cvScalar(0,0,255), MARKER_CROSS, 20,2); //display measurement
-		imshow("Frame ",frame);
+		frame.copyTo(frame_estimations);
+		frame.copyTo(frame_measurements);
+		drawMarker(frame_measurements, meas, cvScalar(0,255,0), MARKER_CROSS, 20,2); //display measurement
+		drawMarker(frame_estimations, v_estimations[i], cvScalar(0,0,255), MARKER_CROSS, 20,2); //display estimation
+
+		string title = "Input Image - Measurements - Estimations";
+		ShowManyImages(title, 3, frame, frame_measurements, frame_estimations);
 
 		// cancel execution by pressing "ESC"
 		if( (char)waitKey(100) == 27)
