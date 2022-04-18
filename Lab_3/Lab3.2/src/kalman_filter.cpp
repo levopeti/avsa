@@ -46,8 +46,8 @@ cv::KalmanFilter create_kalman_filter(int stateSize)
 
         // H
         kf.measurementMatrix = (cv::Mat_<float>(measSize,stateSize) << 
-	    1,  0,  0,  0,  0,  0, 
-	    0,  0,  0,  1,  0,  0);
+        1,  0,  0,  0,  0,  0, 
+        0,  0,  0,  1,  0,  0);
 
         // Q
         kf.processNoiseCov = (cv::Mat_<float>(stateSize,stateSize) << 
@@ -58,9 +58,9 @@ cv::KalmanFilter create_kalman_filter(int stateSize)
          0,  0,  0,  0, 10,  0,
          0,  0,  0,  0,  0,  1);
        
-       	// R and P
-	    setIdentity(kf.measurementNoiseCov, cv::Scalar::all(25));
-	    setIdentity(kf.errorCovPost, cv::Scalar::all(10e5));
+           // R and P
+        setIdentity(kf.measurementNoiseCov, cv::Scalar::all(25));
+        setIdentity(kf.errorCovPost, cv::Scalar::all(10e5));
 
     }
     else
@@ -80,8 +80,8 @@ void do_kalman(cv::Point meas, int stateSize, cv::KalmanFilter &kf, bool &first_
 
     // Initialization
     cv::Mat state(stateSize, 1, CV_32F);
-	cv::Mat estimated(stateSize, 1, CV_32F);
-	cv::Mat measurement(2, 1, CV_32F);
+    cv::Mat estimated(stateSize, 1, CV_32F);
+    cv::Mat measurement(2, 1, CV_32F);
 
     // PREDICTION
     state = kf.predict();
@@ -122,20 +122,20 @@ void draw_trajectory(std::vector<cv::Point> v, cv::String legend, cv::Mat &frame
 {
 
     // Write the legend
-	putText(frame,legend,origin_point,cv::FONT_HERSHEY_COMPLEX_SMALL, 0.8, color, 1, CV_AA);
+    putText(frame,legend,origin_point,cv::FONT_HERSHEY_COMPLEX_SMALL, 0.8, color, 1, CV_AA);
 
     // Draw the trayectory and the points
-	for (size_t i=1; i<v.size()-1; i++)
-	{
-		if (v[i].x>0 && v[i].y>0)
-		{
-			cv::circle(frame, v[i], 3, color, CV_FILLED);
-			if (v[i+1].x>0 && v[i+1].y>0)
-			{
-				cv::line(frame, v[i], v[i+1], color);
-			}
-		}
-	}
+    for (size_t i=1; i<v.size()-1; i++)
+    {
+        if (v[i].x>0 && v[i].y>0)
+        {
+            cv::circle(frame, v[i], 3, color, CV_FILLED);
+            if (v[i+1].x>0 && v[i+1].y>0)
+            {
+                cv::line(frame, v[i], v[i+1], color);
+            }
+        }
+    }
 
 }
 
