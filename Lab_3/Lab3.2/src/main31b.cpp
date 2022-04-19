@@ -60,7 +60,12 @@ int main(int argc, char ** argv)
 
 
 	// KALMAN initialization
-	int stateSize = 6; //Dimensionality of the state (4: constant vel;  6: constant acc)
+	int stateSize; //Dimensionality of the state (4: constant vel;  6: constant acc)
+
+	// Input mode as argument
+	if (argc == 2) stateSize = atoi(argv[1]);
+	else stateSize = 4;
+
 	KalmanFilter kf = create_kalman_filter(stateSize);
 
 	// Vectors to store the measurements and estimations
@@ -103,6 +108,8 @@ int main(int argc, char ** argv)
 
 		string title = "Input Image - Measurements - Estimations";
 		ShowManyImages(title, 3, frame, frame_measurements, frame_estimations);
+
+		// imwrite({"../../../Lab_3/images/frame4_est" + str.str() + "_.png"}, frame_estimations);
 
 		// cancel execution by pressing "ESC"
 		if( (char)waitKey(100) == 27)
