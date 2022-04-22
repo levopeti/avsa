@@ -30,7 +30,8 @@ int main(int argc, char ** argv)
 {
 	int count=0;		 											// frame counter
 	Mat frame;														// frame of the video sequence
-	std::string inputvideo = "../../../Lab_3/dataset_lab3/lab3.1/singleball.mp4";
+	std::string inputvideo = "/home/levcsi/IPCV_Madrid/AVSA/Lab_3/dataset_lab3/lab3.1/singleball.mp4";
+//	std::string inputvideo = "../../../Lab_3/dataset_lab3/lab3.1/singleball.mp4";
 
 	//alternatively, the videofile can be passed via arguments of the executable
 	if (argc == 3) inputvideo = argv[1];
@@ -57,7 +58,7 @@ int main(int argc, char ** argv)
 	double lr = 0.005;
 	int min_width = 2;
 	int min_height = 2;
-	int morph_size = 3;
+	int morph_size = 1;
 
 	//main loop
 	for (;;) {
@@ -78,7 +79,9 @@ int main(int argc, char ** argv)
 
 		//morphological opening to filter noise
 		Mat element = getStructuringElement(MORPH_RECT, Size(2 * morph_size + 1, 2 * morph_size + 1), Point(morph_size, morph_size));
+
 		cv::erode(fgMOG, efgMOG, element, Point(-1, -1), 1);
+		cv::dilate(efgMOG, efgMOG, element, Point(-1, -1), 1);
 
 		//blob extraction
 		extractBlobs(efgMOG, bloblist, 4);
@@ -109,10 +112,6 @@ int main(int argc, char ** argv)
 					   fgMOG,
 					   efgMOG,
 					   resultFrame);
-
-		int a;
-		cin >> a;
-
 
 		//cancel execution by pressing "ESC"
 		if( (char)waitKey(100) == 27)
