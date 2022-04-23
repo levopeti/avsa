@@ -55,12 +55,12 @@ cv::KalmanFilter create_kalman_filter(int stateSize)
          0, 10,  0,  0,  0,  0,   
          0,  0,  1,  0,  0,  0,   
          0,  0,  0, 25,  0,  0, 
-         0,  0,  0,  0, 10,  0,
+         0,  0,  0,  0,  10,  0,
          0,  0,  0,  0,  0,  1);
        
-           // R and P
+        // R and P
         setIdentity(kf.measurementNoiseCov, cv::Scalar::all(25));
-        setIdentity(kf.errorCovPost, cv::Scalar::all(10e5));
+        setIdentity(kf.errorCovPost, cv::Scalar::all(1e5));
 
     }
     else
@@ -86,6 +86,10 @@ void do_kalman(cv::Point meas, int stateSize, cv::KalmanFilter &kf, bool &first_
     // PREDICTION
     state = kf.predict();
 
+    std::cout<<"\n";
+    std::cout << state << std::endl;
+
+
     // Measurements
     measurement.at<float>(0) = meas.x;
     measurement.at<float>(1) = meas.y;
@@ -103,7 +107,6 @@ void do_kalman(cv::Point meas, int stateSize, cv::KalmanFilter &kf, bool &first_
     // If there are no observations
     if (meas.x<0 || meas.y<0)
     {
-    	std::cout << state << std::endl;
         kf.statePost = state;
     }
     // UPDATE
