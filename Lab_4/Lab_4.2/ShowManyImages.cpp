@@ -104,7 +104,7 @@ else if (nArgs == 2) {
     size = 500;
 }
 else if (nArgs == 3 || nArgs == 4) {
-    w = 2; h = 2;
+    w = 3; h = 1;
     size = 400;
 }
 else if (nArgs == 5 || nArgs == 6) {

@@ -34,27 +34,29 @@ int main(int argc, char ** argv)
 	std::string dataset_path = "./dataset/";									//dataset location.
 	std::string output_path = "./outvideos/";									//location to save output videos
 
-	// dataset paths
-	std::string sequences[] = {"bolt1",										//test data for lab4.1, 4.3 & 4.5
-							   "sphere","car1",								//test data for lab4.2
-							   "ball2","basketball",						//test data for lab4.4
-							   "bag","ball","road",};						//test data for lab4.6
+	// // dataset paths
+	// std::string sequences[] = {"bolt1",										//test data for lab4.1, 4.3 & 4.5
+	// 						   "sphere","car1",								//test data for lab4.2
+	// 						   "ball2","basketball",						//test data for lab4.4
+	// 						   "bag","ball","road",};						//test data for lab4.6
+	std::string sequences[] = {"ball2"};	
 
 	std::string image_path = "%08d.jpg"; 									//format of frames. DO NOT CHANGE
 	std::string groundtruth_file = "groundtruth.txt"; 						//file for ground truth data. DO NOT CHANGE
 	int NumSeq = sizeof(sequences)/sizeof(sequences[0]);					//number of sequences
 
 	// PARAMETERS CANDIDATE MATCHING
-	vector<int> step_nums{4, 4};
-	vector<int> pixel_grid_stride{2, 4};
+	vector<int> step_nums{10,11};
+	vector<int> pixel_grid_stride{4, 2};
 
 	// PARAMETERS HISTOGRAM
-	int n_bins = 16;
+	int n_bins = 80;
 	// PARAMETERS HOG
 	Size s_block  = Size(0,0);
 	Size s_cell   = Size(0,0);
 	Size s_stride = Size(0,0);
-	bool resize_img = false;
+	bool resize_img = false
+	;
 	
 	// FEATURE SELECTION
 	// GRAY_LEVEL = 0
@@ -115,8 +117,9 @@ int main(int argc, char ** argv)
 		std::cout << "  with groundtruth at " << inputGroundtruth << std::endl;
 		int idd = 0;
 
-		// vector to store the estimated bb
-		std::vector<Rect> estimated_bb;
+		// mat for the first frame histogram
+		Mat ff_hist;
+
 
 
 		for (;;) {
@@ -130,28 +133,30 @@ int main(int argc, char ** argv)
 			double t = (double)getTickCount();
 			frame_idx=cap.get(cv::CAP_PROP_POS_FRAMES);			//get the current frame
 
-			if (idd==1)
-			{
-				hist_ff  = create_histogram(frame, list_bbox_gt[frame_idx-1], n_bins, feature, s_block, s_cell, s_stride, resize_img);
-				estimated_bb.push_back(list_bbox_gt[frame_idx-1]);
-			}
-
 
 			////////////////////////////////////////////////////////////////////////////////////////////
 
 			//DO TRACKING
-			//Change the following line with your own code
-			CandMatching cand_matching(estimated_bb[frame_idx-1]);
+
+			// For the first frame only 
+			if (idd==1)
+			{	
+				// get the first frame histogram and location
+				ff_hist = create_histogram(frame, list_bbox_gt[frame_idx-1], n_bins, feature, s_block, s_cell, s_stride, resize_img);
+				list_bbox_est.push_back(list_bbox_gt[frame_idx-1]);
+			}
+
+			
+			// Generate the grif of candidates
+			CandMatching cand_matching(list_bbox_est[frame_idx-1]);
 			cand_matching.makeCandGrid(frame, step_nums, pixel_grid_stride);
-			cand_matching.makeMatchScores(frame, hist_ff, n_bins, feature, s_block, s_cell, s_stride, resize_img);
-			estimated_bb.push_back(cand_matching.candWithMinScore());
 
-			// list_bbox_est.push_back(Rect(20,20,40,50));//we use a fixed value only for this demo program. Remove this line when you use your code
-			//...
-			// ADD YOUR CODE HERE
+			// Compare the candidates with the target 
+			cand_matching.makeMatchScores(frame, ff_hist, n_bins, feature, s_block, s_cell, s_stride, resize_img);
 
+			// Store the best candidate
+			list_bbox_est.push_back(cand_matching.candWithMinScore());
 
-			//...
 			///////////////////////////////////////////////////
 
 			//Time measurement
@@ -161,13 +166,12 @@ int main(int argc, char ** argv)
 			// plot frame number & groundtruth bounding box for each frame
 			putText(frame, std::to_string(frame_idx), cv::Point(10,15),FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 255)); //text in red
 			rectangle(frame, list_bbox_gt[frame_idx-1], Scalar(0, 255, 0));		//draw bounding box for groundtruth
-			rectangle(frame, estimated_bb[frame_idx], Scalar(255, 0, 0));		//draw bounding box for groundtruth
-			// rectangle(frame, list_bbox_est[frame_idx-1], Scalar(0, 0, 255));	//draw bounding box (estimation)
+			rectangle(frame, list_bbox_est[frame_idx], Scalar(255, 0, 0));		//draw bounding box for estimation
 
 			// cout<<"ERROR"<<endl;
 
 			// SHOW IMAGES
-			ShowManyImages(enum_str[feature], 2, frame, frame(estimated_bb[frame_idx]));
+			ShowManyImages(enum_str[feature], 3, frame, frame(list_bbox_gt[frame_idx-1]), frame(list_bbox_est[frame_idx]));
 			// ShowManyImages(enum_str[feature]+string("_fixed_bb"), 4, frame, frame(list_bbox_est[frame_idx-1]), img2, hist_img2);
 
 
@@ -188,6 +192,7 @@ int main(int argc, char ** argv)
 		// break;
 
 		//comparison groundtruth & estimation
+		list_bbox_est.erase(list_bbox_est.begin());
 		vector<float> trackPerf = estimateTrackingPerformance(list_bbox_gt, list_bbox_est);
 
 		//print stats about processing time and tracking performance
